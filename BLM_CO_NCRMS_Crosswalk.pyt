@@ -39,6 +39,7 @@ Usage:
 
 from __future__ import division
 from collections import defaultdict
+from collections import Counter
 import copy
 import csv
 import datetime
@@ -302,7 +303,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                     else:
                          collections[site_id] = False
 
-            # Read in the domain mapping from CSV - necessary to keep up with dosource SHPO 'domain' changes
+            # Read in the domain mapping from CSV - necessary to keep up with source SHPO 'domain' changes
             domain_mapping = defaultdict(dict)
 
             logger.log_all('Reading domain table..')
@@ -404,22 +405,32 @@ class Crosswalk_NCRMS_Site_Data(object):
                         # RSRCE_AGCY_ID = row[16]
                         row[16] = SITE_
 
-
-
                         # RSRCE_CAT = row[17]
+                        # RSRCE_PRMRY_CAT_NM = row[28]
                         if archaeology:
                             archaeology = archaeology.replace('HISTORIC>', '')
                             arch_items = [ai for ai in archaeology.split('>') if ai.strip()]
+                        else: arch_items = []
+
+                        if site_type:
                             site_types = [st for st in site_type.split('>') if st.strip()]
-                            rsrce_cats = set(arch_items + site_types)
+                        else: site_types = []
+
+                        rsrce_cats = arch_items + site_types
+                        if rsrce_cats:
                             rsrce_cat = ', '.join(sorted(rsrce_cats))
                             row[17] = format_data(rsrce_cat, target_schema['RSRCE_CAT'])
+                            # Remap each value to its corresponding domain value
+                            dom_cat = [map_domain_values(v, domain_mapping['CRM_DOM_RSRCE_PRMRY_CAT'])
+                                       for v in rsrce_cats]
+                            # Pick the most common
+                            res_cnt = Counter(dom_cat)
+                            #TODO: what about ties?
+                            max_res_cat = res_cnt.most_common(1)[0][0]
+                            row[28] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CAT_NM'])
                         else:
                             row[17] = None
-                        # RSRCE_PRMRY_CAT_NM = row[28]
-                        #TODO:
-
-
+                            row[28] = None
 
                         # RSRCE_CLCTN_PRFRM_STTS = row[18]
                         collection_status = collections.get(SITE_)
@@ -502,7 +513,7 @@ class Crosswalk_NCRMS_Site_Data(object):
 
                         # RSRCE_SITE_DOC_NAME = row[32]
                         if site_doc_name:
-                            site_doc_name = ', '.join(['{}'.format(s) for s in site_doc_name.split('>')])
+                            site_doc_name = ', '.join(['[{}]'.format(s) for s in site_doc_name.split('>')])
                             row[32] = format_data(site_doc_name, target_schema['RSRCE_SITE_DOC_NAME'])
                         else:
                             row[32] = None
@@ -591,7 +602,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                             logger.logfile("Delete field from [Success FC] failed: {}".format(field.name)) 
 
             # Update the site-survey many-to-many relationship table
-            logger.log_all('Updating M-M table..')
+            logger.log_all('Updating Many-to-Many table..')
             with arcpy.da.InsertCursor(site_survey_map_table, ['CRM_RSRCE_ID', 'CRM_INVSTGTN_ID']) as cur:
                 for site_id, doc_id in site_survey_mapping:
                     cur.insertRow((site_id, doc_id))

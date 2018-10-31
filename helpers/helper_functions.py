@@ -126,6 +126,7 @@ def map_domain_values(raw_value, domain_mapping_dict):
 
 def split_and_map_domain_values(raw_value, domain_mapping_dict, delimiter='>'):
     vals = raw_value.split(delimiter)
+    vals = [clean_string(v) for v in vals if v]  # No None, no weird stuff
     vals = [domain_mapping_dict.get(v, None) for v in vals]
     # Can implment polling here..
     return vals
