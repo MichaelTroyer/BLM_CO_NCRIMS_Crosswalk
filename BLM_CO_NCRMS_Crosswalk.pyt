@@ -38,8 +38,9 @@ Usage:
 ###################################################################################################
 
 from __future__ import division
-from collections import defaultdict
 from collections import Counter
+from collections import defaultdict
+from collections import OrderedDict
 import copy
 import csv
 import datetime
@@ -226,29 +227,30 @@ class Crosswalk_NCRMS_Site_Data(object):
             logger.log_all('{} total rows..\n'.format(n_rows))
 
             ### Add the target fields ###
-            #TODO: switch to ordered dict and use as basis for NCRMS field ordering during update
-            target_schema = {
-                'RSRCE_AGCY_ID'             : {'ALIAS': 'Agency Resource Identifier', 'LENGTH': 50, 'TYPE': 'String', 'DOMAIN': None,  'DEFAULT': None,},
-                'RSRCE_SHPO_ID'             : {'ALIAS': 'SHPO Database Resource Identifier', 'LENGTH': 50, 'TYPE': 'String', 'DOMAIN': None, 'DEFAULT': None,},
-                'RSRCE_NM'                  : {'ALIAS': 'Resource Name', 'LENGTH': 255, 'TYPE': 'String', 'DOMAIN': None, 'DEFAULT': None,},
-                'RSRCE_TMPRL_CLTRL_ASGNMNT' : {'ALIAS': 'Resource Temporal Cultural Assignment', 'LENGTH': 50, 'TYPE': 'String', 'DOMAIN': 'CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT', 'DEFAULT': 'Unknown',},
-                'RSRCE_PRMRY_PRPRTY_CL'     : {'ALIAS': 'Resource Primary Property Class', 'LENGTH': 30, 'TYPE': 'String', 'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_PRPRTY_CL', 'DEFAULT': 'Site',},
-                'RSRCE_PRMRY_CAT_NM'        : {'ALIAS': 'Resource Primary Category Name', 'LENGTH': 30, 'TYPE': 'String', 'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_CAT', 'DEFAULT': 'Unknown',},
-                'RSRCE_CAT'                 : {'ALIAS': 'Resource Category', 'LENGTH': 2000, 'TYPE': 'String', 'DOMAIN': None, 'DEFAULT': None,},
-                'RSRCE_NRHP_ELGBLE_STTS'    : {'ALIAS': 'Resource NRHP Eligibility Status', 'LENGTH': 12, 'TYPE': 'String', 'DOMAIN': 'DOM_YES_NO_UNDTRMND', 'DEFAULT': 'Undetermined',},
-                'RSRCE_NRHP_ELGBLE_CRTRA'   : {'ALIAS': 'NRHP Eligibility Criteria', 'LENGTH': 35, 'TYPE': 'String', 'DOMAIN': 'CRM_DOM_RSRCE_NRHP_ELGBLE_CRTRA', 'DEFAULT': 'Not Specified',},
-                'RSRCE_NRHP_ELGBLE_AUTH_NM' : {'ALIAS': 'Resource NRHP Eligibility Authority Name', 'DOMAIN': 'CRM_DOM_ RSRCE_NRHP_ELGBLE_AUTH_NM', 'DEFAULT': 'NA', 'LENGTH': 35, 'TYPE': 'String',},
-                'RSRCE_CNDTN_ASSMNT'        : {'ALIAS': 'Resource Condition Assessment', 'DOMAIN': 'CRM_DOM_RSRCE_CNDTN_ASSMNT', 'DEFAULT': 'Unknown', 'LENGTH': 50, 'TYPE': 'String',},
-                'RSRCE_LAST_RCRD_DT'        : {'ALIAS': 'Resource Last Recorded Date', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 20, 'TYPE': 'String',},
-                'RSRCE_DATE'                : {'ALIAS': 'Resource Last Recorded Date in Date Format', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 20, 'TYPE': 'Date',},
-                'RSRCE_CLCTN_PRFRM_STTS'    : {'ALIAS': 'Resource Collection Performed Status', 'DOMAIN': 'CRM_DOM_RSRCE_CLCTN_PRFRM_STTS', 'DEFAULT': 'Unknown', 'LENGTH': 20, 'TYPE': 'String',},
-                'RSRCE_DATA_SRCE'           : {'ALIAS': 'Resource Data Source', 'DOMAIN': 'CRM_DOM_DATA_SRCE', 'DEFAULT': 'Unknown', 'LENGTH': 25, 'TYPE': 'String',},
-                'RSRCE_SPTL_CLCTN_MTHD'     : {'ALIAS': 'Resource Spatial Collection Method', 'DOMAIN': 'CRM_DOM_SPTL_CLCTN_MTHD', 'DEFAULT': 'Unknown', 'LENGTH': 30, 'TYPE': 'String',},
-                'RSRCE_CMT'                 : {'ALIAS': 'Resource Comments', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 2000, 'TYPE': 'String',},
-                'RSRCE_SITE_DOC_ID'         : {'ALIAS': 'Report ID', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 255, 'TYPE': 'String',},
-                'RSRCE_SITE_DOC_NAME'       : {'ALIAS': 'Report Name', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 2000, 'TYPE': 'String',},
-                'ADMIN_ST'                  : {'ALIAS': 'Administrative State Code', 'DOMAIN': 'DOM_ADMIN_ST', 'DEFAULT': None, 'LENGTH': 2, 'TYPE': 'String',},
-                }
+            target_schema = OrderedDict()  # remembers insert order for iteration
+            for key, val in [
+                ('RSRCE_AGCY_ID',              {'ALIAS': 'Agency Resource Identifier', 'LENGTH': 50, 'TYPE': 'String', 'DOMAIN': None,  'DEFAULT': None,}),
+                ('RSRCE_SHPO_ID',              {'ALIAS': 'SHPO Database Resource Identifier', 'LENGTH': 50, 'TYPE': 'String', 'DOMAIN': None, 'DEFAULT': None,}),
+                ('RSRCE_NM',                   {'ALIAS': 'Resource Name', 'LENGTH': 255, 'TYPE': 'String', 'DOMAIN': None, 'DEFAULT': None,}),
+                ('RSRCE_TMPRL_CLTRL_ASGNMNT',  {'ALIAS': 'Resource Temporal Cultural Assignment', 'LENGTH': 50, 'TYPE': 'String', 'DOMAIN': 'CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT', 'DEFAULT': 'Unknown',}),
+                ('RSRCE_PRMRY_PRPRTY_CL',      {'ALIAS': 'Resource Primary Property Class', 'LENGTH': 30, 'TYPE': 'String', 'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_PRPRTY_CL', 'DEFAULT': 'Site',}),
+                ('RSRCE_PRMRY_CAT_NM',         {'ALIAS': 'Resource Primary Category Name', 'LENGTH': 30, 'TYPE': 'String', 'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_CAT', 'DEFAULT': 'Unknown',}),
+                ('RSRCE_CAT',                  {'ALIAS': 'Resource Category', 'LENGTH': 2000, 'TYPE': 'String', 'DOMAIN': None, 'DEFAULT': None,}),
+                ('RSRCE_NRHP_ELGBLE_STTS',     {'ALIAS': 'Resource NRHP Eligibility Status', 'LENGTH': 12, 'TYPE': 'String', 'DOMAIN': 'DOM_YES_NO_UNDTRMND', 'DEFAULT': 'Undetermined',}),
+                ('RSRCE_NRHP_ELGBLE_CRTRA',    {'ALIAS': 'NRHP Eligibility Criteria', 'LENGTH': 35, 'TYPE': 'String', 'DOMAIN': 'CRM_DOM_RSRCE_NRHP_ELGBLE_CRTRA', 'DEFAULT': 'Not Specified',}),
+                ('RSRCE_NRHP_ELGBLE_AUTH_NM',  {'ALIAS': 'Resource NRHP Eligibility Authority Name', 'DOMAIN': 'CRM_DOM_ RSRCE_NRHP_ELGBLE_AUTH_NM', 'DEFAULT': 'NA', 'LENGTH': 35, 'TYPE': 'String',}),
+                ('RSRCE_CNDTN_ASSMNT',         {'ALIAS': 'Resource Condition Assessment', 'DOMAIN': 'CRM_DOM_RSRCE_CNDTN_ASSMNT', 'DEFAULT': 'Unknown', 'LENGTH': 50, 'TYPE': 'String',}),
+                ('RSRCE_LAST_RCRD_DT',         {'ALIAS': 'Resource Last Recorded Date', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 20, 'TYPE': 'String',}),
+                ('RSRCE_DATE',                 {'ALIAS': 'Resource Last Recorded Date in Date Format', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 20, 'TYPE': 'Date',}),
+                ('RSRCE_CLCTN_PRFRM_STTS',     {'ALIAS': 'Resource Collection Performed Status', 'DOMAIN': 'CRM_DOM_RSRCE_CLCTN_PRFRM_STTS', 'DEFAULT': 'Unknown', 'LENGTH': 20, 'TYPE': 'String',}),
+                ('RSRCE_DATA_SRCE',            {'ALIAS': 'Resource Data Source', 'DOMAIN': 'CRM_DOM_DATA_SRCE', 'DEFAULT': 'Unknown', 'LENGTH': 25, 'TYPE': 'String',}),
+                ('RSRCE_SPTL_CLCTN_MTHD',      {'ALIAS': 'Resource Spatial Collection Method', 'DOMAIN': 'CRM_DOM_SPTL_CLCTN_MTHD', 'DEFAULT': 'Unknown', 'LENGTH': 30, 'TYPE': 'String',}),
+                ('RSRCE_CMT',                  {'ALIAS': 'Resource Comments', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 2000, 'TYPE': 'String',}),
+                ('RSRCE_SITE_DOC_ID',          {'ALIAS': 'Report ID', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 255, 'TYPE': 'String',}),
+                ('RSRCE_SITE_DOC_NAME',        {'ALIAS': 'Report Name', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 2000, 'TYPE': 'String',}),
+                ('ADMIN_ST',                   {'ALIAS': 'Administrative State Code', 'DOMAIN': 'DOM_ADMIN_ST', 'DEFAULT': None, 'LENGTH': 2, 'TYPE': 'String',}),
+            ]: 
+                target_schema[key] = val
 
             logger.console('Adding NCRMS fields..')
             for field_name, field_params in target_schema.items():
@@ -315,8 +317,8 @@ class Crosswalk_NCRMS_Site_Data(object):
             for domain in domain_mapping.keys():
                  logger.log_all('Found domain [{}]'.format(domain))
 
-            NCRMS_fields = sorted(target_schema.keys())
-            #TODO: REDO order from above - NCRMS_fields = target_schema.keys()
+            # NCRMS_fields = sorted(target_schema.keys())
+            NCRMS_fields = target_schema.keys()
             SHPO_fields = [
                 'SITE_', 'site_doc_id', 'site_doc_name', 'name',
                 'resource_type', 'culture',  'archaeology', 'site_type',
@@ -379,39 +381,57 @@ class Crosswalk_NCRMS_Site_Data(object):
                         feature        = clean_string(feature)
                         artifact       = clean_string(artifact)                       
 
-                        # 15 ADMIN_ST
-                        # 16 RSRCE_AGCY_ID
-                        # 17 RSRCE_CAT
-                        # 18 RSRCE_CLCTN_PRFRM_STTS
-                        # 19 RSRCE_CMT
-                        # 20 RSRCE_CNDTN_ASSMNT
-                        # 21 RSRCE_DATA_SRCE
-                        # 22 RSRCE_DATE
-                        # 23 RSRCE_LAST_RCRD_DT
-                        # 24 RSRCE_NM
-                        # 25 RSRCE_NRHP_ELGBLE_AUTH_NM
-                        # 26 RSRCE_NRHP_ELGBLE_CRTRA
-                        # 27 RSRCE_NRHP_ELGBLE_STTS
-                        # 28 RSRCE_PRMRY_CAT_NM
-                        # 29 RSRCE_PRMRY_PRPRTY_CL
-                        # 30 RSRCE_SHPO_ID
-                        # 31 RSRCE_SITE_DOC_ID
-                        # 32 RSRCE_SITE_DOC_NAME
-                        # 33 RSRCE_SPTL_CLCTN_MTHD
-                        # 34 RSRCE_TMPRL_CLTRL_ASGNMNT
-
-
+                        # 15 'RSRCE_AGCY_ID'             
+                        # 16 'RSRCE_SHPO_ID'             
+                        # 17 'RSRCE_NM'                  
+                        # 18 'RSRCE_TMPRL_CLTRL_ASGNMNT'
+                        # 19 'RSRCE_PRMRY_PRPRTY_CL'    
+                        # 20 'RSRCE_PRMRY_CAT_NM'       
+                        # 21 'RSRCE_CAT'                
+                        # 22 'RSRCE_NRHP_ELGBLE_STTS'   
+                        # 23 'RSRCE_NRHP_ELGBLE_CRTRA'  
+                        # 24 'RSRCE_NRHP_ELGBLE_AUTH_NM'
+                        # 25 'RSRCE_CNDTN_ASSMNT'       
+                        # 26 'RSRCE_LAST_RCRD_DT'       
+                        # 27 'RSRCE_DATE'               
+                        # 28 'RSRCE_CLCTN_PRFRM_STTS'   
+                        # 29 'RSRCE_DATA_SRCE'          
+                        # 30 'RSRCE_SPTL_CLCTN_MTHD'    
+                        # 31 'RSRCE_CMT'                
+                        # 32 'RSRCE_SITE_DOC_ID'        
+                        # 33 'RSRCE_SITE_DOC_NAME'      
+                        # 34 'ADMIN_ST'
+                
                         # Track comments throughout and add to COMMENTS field
                         comments = ''
 
-                        # ADMIN_ST = row[15]
-                        row[15] = 'CO'
+                        # RSRCE_AGCY_ID = row[15]
+                        row[15] = SITE_
 
-                        # RSRCE_AGCY_ID = row[16]
+                        # RSRCE_SHPO_ID = row[16]
                         row[16] = SITE_
 
-                        # RSRCE_CAT = row[17]
-                        # RSRCE_PRMRY_CAT_NM = row[28]
+                        # RSRCE_NM = row[17]
+                        if name:
+                            row[17] = format_data(name, target_schema['RSRCE_NM'])
+                        else:
+                            row[17] = None
+
+                        # RSRCE_TMPRL_CLTRL_ASGNMNT = row[18]
+                        if resource_type:
+                            try:
+                                res_type = map_domain_values(resource_type, domain_mapping['CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT'])
+                                row[18] = format_data(res_type, target_schema['RSRCE_TMPRL_CLTRL_ASGNMNT'])
+                            except Exception:
+                                raise TemporalAssessmentDomainError(resource_type)
+                        else:
+                            row[18] = 'Unknown'
+
+                        # RSRCE_PRMRY_PRPRTY_CL = row[19]
+                        row[19] = 'Site'
+
+                        # RSRCE_PRMRY_CAT_NM = row[20]
+                        # RSRCE_CAT = row[21]
                         if archaeology:
                             archaeology = archaeology.replace('HISTORIC>', '')
                             arch_items = [ai for ai in archaeology.split('>') if ai.strip()]
@@ -424,7 +444,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                         rsrce_cats = arch_items + site_types
                         if rsrce_cats:
                             rsrce_cat = ', '.join(sorted(rsrce_cats))
-                            row[17] = format_data(rsrce_cat, target_schema['RSRCE_CAT'])
+                            row[21] = format_data(rsrce_cat, target_schema['RSRCE_CAT'])
                             # Remap each value to its corresponding domain value
                             dom_cat = [map_domain_values(v, domain_mapping['CRM_DOM_RSRCE_PRMRY_CAT'])
                                        for v in rsrce_cats]
@@ -432,115 +452,96 @@ class Crosswalk_NCRMS_Site_Data(object):
                             res_cnt = Counter(dom_cat)
                             #TODO: what about ties?
                             max_res_cat = res_cnt.most_common(1)[0][0]
-                            row[28] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CAT_NM'])
+                            row[20] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CAT_NM'])
                         else:
-                            row[17] = None
-                            row[28] = None
+                            row[21] = None
+                            row[20] = None
 
-                        # RSRCE_CLCTN_PRFRM_STTS = row[18]
-                        collection_status = collections.get(SITE_)
-                        row[18] = 'Yes' if collection_status else 'Unknown'
-
-                        # RSRCE_CNDTN_ASSMNT = row[20]
+                        # RSRCE_CNDTN_ASSMNT = row[25]
                         cnd = tbl_updates['Condition'].get(SITE_)
                         if cnd:
                             cnd_val = cnd['Condition']
                             cnd_date = cnd['date']
                             try:
                                 dom_cnd = map_domain_values(cnd_val, domain_mapping['CRM_DOM_RSRCE_CNDTN_ASSMNT'])
-                                row[20] = format_data(dom_cnd, target_schema['RSRCE_CNDTN_ASSMNT'])
+                                row[25] = format_data(dom_cnd, target_schema['RSRCE_CNDTN_ASSMNT'])
                             except Exception:
                                 raise ConditionDomainError(cnd)
                         else:
-                            row[20] = 'Unknown'
-
-                        # RSRCE_DATA_SRCE = row[21]
-                        row[21] = 'CO SHPO'
-                       
-                        # RSRCE_NM = row[24]
-                        if name:
-                            row[24] = format_data(name, target_schema['RSRCE_NM'])
-                        else:
-                            row[24] = None
+                            row[25] = 'Unknown'                    
 
                         # Get most recent eligibility, authority, and date
-                        # RSRCE_NRHP_ELGBLE_STTS = row[27]
-                        # RSRCE_NRHP_ELGBLE_AUTH_NM = row[25]
-                        # RSRCE_DATE = row[22] - full date value as date
-                        # RSRCE_LAST_RCRD_DT = row[23] - year only as string
-                        # RSRCE_NRHP_ELGBLE_CRTRA = row[26]
+                        # RSRCE_NRHP_ELGBLE_STTS = row[22]
+                        # RSRCE_NRHP_ELGBLE_CRTRA = row[23]
+                        # RSRCE_NRHP_ELGBLE_AUTH_NM = row[24]
+                        # RSRCE_LAST_RCRD_DT = row[26] - year only as string
+                        # RSRCE_DATE = row[27] - full date value as date
                         assessment = tbl_updates['Assessment'].get(SITE_)
                         if assessment:
                             assess_val = assessment['Assessment']
                             assess_date = assessment['date']
 
                             try:
-                                row[27] = map_domain_values(assess_val, domain_mapping['DOM_YES_NO_UNDTRMND'])
+                                row[22] = map_domain_values(assess_val, domain_mapping['DOM_YES_NO_UNDTRMND'])
                             except Exception:
                                 raise AssessmentDomainError(assess_val)
 
                             try:
-                                row[22] = assess_date
+                                row[27] = assess_date
                                 try:
-                                    row[23] =  assess_date.year
+                                    row[26] =  assess_date.year
                                 except:
-                                    row[23] = None
+                                    row[26] = None
                             except Exception:
                                 raise AssessmentDateError(assess_date)
 
                             try:
-                                row[25] = map_domain_values(assess_val, domain_mapping['CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM'])
+                                row[24] = map_domain_values(assess_val, domain_mapping['CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM'])
                             except Exception:
                                 raise AssessmentAuthorityDomainError(assess_val)
 
                             try:
-                                row[26] = parse_assessment_criteria((NRC_A, NRC_B, NRC_C, NRC_D))
+                                row[23] = parse_assessment_criteria((NRC_A, NRC_B, NRC_C, NRC_D))
                             except Exception:
                                 raise AssessmentCriteriaDomainError((NRC_A, NRC_B, NRC_C, NRC_D))
                         else:
-                            row[22], row[23], row[25], row[26], row[27] = None, None, 'NA', None, 'Unknown'
+                            row[27], row[26], row[24], row[23], row[22] = None, None, 'NA', None, 'Unknown'
 
-                        # RSRCE_PRMRY_PRPRTY_CL = row[29]
-                        row[29] = 'Site'
+                        # RSRCE_CLCTN_PRFRM_STTS = row[28]
+                        collection_status = collections.get(SITE_)
+                        row[28] = 'Yes' if collection_status else 'Unknown'
 
-                        # RSRCE_SHPO_ID = row[30]
-                        row[30] = SITE_
+                        # RSRCE_DATA_SRCE = row[29]
+                        row[29] = 'CO SHPO'
 
-                        # RSRCE_SITE_DOC_ID = row[31]
+                        # RSRCE_SPTL_CLCTN_MTHD = row[30]
+                        row[30] = 'Unknown'
+                        
+                        # RSRCE_CMT = row[31]
+                        comments += '[FEATURES: {}] '.format(feature.replace('>', ', ')) if feature else ''
+                        comments += '[ARTIFACTS: {}] '.format(artifact.replace('>', ', ')) if artifact else ''
+                        row[31] = format_data(comments, target_schema['RSRCE_CMT'])
+
+                        # RSRCE_SITE_DOC_ID = row[32]
                         if site_doc_id:
                             doc_ids = set([sid for sid in site_doc_id.split('>') if sid.strip()])
                             for doc_id in doc_ids:
                                 site_survey_mapping.append((SITE_, doc_id))
                             id_string = ', '.join(sorted(doc_ids))
-                            row[31] = format_data(id_string, target_schema['RSRCE_SITE_DOC_ID'])
-                        else:
-                            row[31] = None
-
-                        # RSRCE_SITE_DOC_NAME = row[32]
-                        if site_doc_name:
-                            site_doc_name = ', '.join(['[{}]'.format(s) for s in site_doc_name.split('>')])
-                            row[32] = format_data(site_doc_name, target_schema['RSRCE_SITE_DOC_NAME'])
+                            row[32] = format_data(id_string, target_schema['RSRCE_SITE_DOC_ID'])
                         else:
                             row[32] = None
 
-                        # RSRCE_SPTL_CLCTN_MTHD = row[33]
-                        row[33] = 'Unknown'
-
-                        # RSRCE_TMPRL_CLTRL_ASGNMNT = row[34]
-                        if resource_type:
-                            try:
-                                res_type = map_domain_values(resource_type, domain_mapping['CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT'])
-                                row[34] = format_data(res_type, target_schema['RSRCE_TMPRL_CLTRL_ASGNMNT'])
-                            except Exception:
-                                raise TemporalAssessmentDomainError(resource_type)
+                        # RSRCE_SITE_DOC_NAME = row[33]
+                        if site_doc_name:
+                            site_doc_name = ', '.join(['[{}]'.format(s) for s in site_doc_name.split('>')])
+                            row[33] = format_data(site_doc_name, target_schema['RSRCE_SITE_DOC_NAME'])
                         else:
-                            row[34] = 'Unknown'
+                            row[33] = None
                         
-                        # RSRCE_CMT = row[19]
-                        comments += '[FEATURES: {}] '.format(feature.replace('>', ', ')) if feature else ''
-                        comments += '[ARTIFACTS: {}] '.format(artifact.replace('>', ', ')) if artifact else ''
-                        row[19] = format_data(comments, target_schema['RSRCE_CMT'])
-                        
+                        # ADMIN_ST = row[34]
+                        row[34] = 'CO'
+
                         ### Update row ###
                         cur.updateRow(row)
                                        
