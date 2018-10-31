@@ -50,9 +50,10 @@ import traceback
 
 import arcpy
 
-from exceptions import *
-from helper_functions import *
-from log_handler import pyt_log
+sys.path.append(r'T:\CO\GIS\gistools\tools\Cultural')
+
+from helpers.helper_functions import *
+from helpers.log_handler import pyt_log
 
 
 ###################################################################################################
@@ -69,8 +70,8 @@ start_time = datetime.datetime.now()
 date_time_stamp = re.sub('[^0-9]', '', str(start_time)[2:16])
 
 log_path = r'T:\CO\GIS\gistools\tools\Cultural\z_logs\NCRMS_Crosswalk_Log.txt'
-gdb_template_xml = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\src\database_schema.xml'
-domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\src\domain_map.csv'
+gdb_template_xml = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\database_schema.xml'
+domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\domain_map.csv'
 
 ### Exceptions
 class ConditionDomainError(BaseException):
