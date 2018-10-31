@@ -74,7 +74,7 @@ log_path = r'T:\CO\GIS\gistools\tools\Cultural\z_logs\NCRMS_Crosswalk_Log.txt'
 gdb_template_xml = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\database_schema.xml'
 domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\domain_map.csv'
 
-### Exceptions
+### Exceptions - pass w/ val - offending data
 class ConditionDomainError(BaseException):
     def __init__(self, val):
         self.val = val
@@ -120,7 +120,6 @@ class Crosswalk_NCRMS_Site_Data(object):
         """Define parameter definitions"""
 
         ## PARAMETERS
-
         # Input SHPO Geodatabase
         src_gdb=arcpy.Parameter(
             displayName="Input SHPO Geodatabase",
@@ -139,8 +138,7 @@ class Crosswalk_NCRMS_Site_Data(object):
             direction="Input"
             )
 
-        parameters = [src_gdb, out_gdb]
-        return parameters
+        return [src_gdb, out_gdb]
 
 
     def isLicensed(self):
@@ -191,6 +189,8 @@ class Crosswalk_NCRMS_Site_Data(object):
             logger.log_report("{}\n".format('-'*120))
             logger.log_all("Running environment: Python - {}\n".format(sys.version))
             logger.log_all("User: {}\n".format(user))
+            logger.log_all("Input gdb:\n\t{}\n".format(input_path))
+            logger.log_all("Output dir:\n\t{}\n".format(output_path))
 
             # Create goedatabase
             gdb_name = 'BLM_CO_NCRMS_Crosswalk_{}'.format(date_time_stamp)
@@ -201,17 +201,14 @@ class Crosswalk_NCRMS_Site_Data(object):
 
             # Set workspace to fGDB
             arcpy.env.workspace = gdb_name
-            logger.log_all("Output Location:\n")
-            logger.log_all('\t{}\n'.format(gdb_name))
 
             # Remove the old [CRM_Resources] - replace with input data copy - mod in place
             arcpy.Delete_management(os.path.join(gdb_name, 'CRM_Resources'))
 
-            # Get the output feature class paths and duplicate table path
+            # Get the paths to output success and failure FCs, duplicate table, and M-to-M table
             success = os.path.join(gdb_name, 'CRM_Resources')
             failure = os.path.join(gdb_name, 'CRM_Resources_fails')
             duplicates = os.path.join(gdb_name, 'CRM_Resources_duplicates')
-            # Get the site survey M-M table
             site_survey_map_table = os.path.join(gdb_name, 'CRM_RSRCE_INVSTGTN_TBL')
 
             # Copy input fc to database and get as a feature layer
@@ -224,10 +221,10 @@ class Crosswalk_NCRMS_Site_Data(object):
             id_field = 'SITE_'
             arcpy.FindIdentical_management(working_lyr, duplicates, id_field, output_record_option='ONLY_DUPLICATES')
             if int(arcpy.GetCount_management(duplicates).getOutput(0)):
-                logger.log_all('WARNING: Duplicate Site IDs found - see duplicate table for details')
+                logger.log_all('WARNING: Duplicate Site IDs found - see duplicate table for details\n')
 
             n_rows = int(arcpy.GetCount_management(working_lyr).getOutput(0))
-            logger.log_all('{} total rows..'.format(n_rows))
+            logger.log_all('{} total rows..\n'.format(n_rows))
 
             ### Add the target fields ###
             target_schema = {
@@ -253,6 +250,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                 'ADMIN_ST'                  : {'ALIAS': 'Administrative State Code', 'DOMAIN': 'DOM_ADMIN_ST', 'DEFAULT': None, 'LENGTH': 2, 'TYPE': 'String',},
                 }
 
+            logger.console('Adding NCRMS fields..')
             for field_name, field_params in target_schema.items():
                 arcpy.AddField_management(
                     in_table=working_lyr,
@@ -262,7 +260,6 @@ class Crosswalk_NCRMS_Site_Data(object):
                     field_alias=field_params['ALIAS'],
                     field_domain=field_params['DOMAIN'],
                     )
-                logger.log_all('Added field [{}]'.format(field_name))
  
             ### Get the related table data ###
             assessment_table = os.path.join(input_path, 'Assessment')
@@ -278,7 +275,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                 }
             for tbl, updates in tbl_updates.items():
                 path = os.path.join(input_path, tbl)
-                logger.log_all('Collecting updates from {} table..'.format(tbl))
+                logger.console('Collecting updates from {} table..'.format(tbl))
                 with arcpy.da.SearchCursor(path, ['Site_ID', tbl, 'Date']) as cur:
                     for site_id, val, dt in cur:
                         if not dt: continue  # Skip null
@@ -292,6 +289,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                 logger.log_all('{} unique records: {}'.format(tbl, len(tbl_updates[tbl])))
 
             # Get the collection status from condition table
+            logger.console('Getting collection status from Condition table')
             collections = {}
             with arcpy.da.SearchCursor(condition_table, ['Site_ID', 'Condition']) as cur:
                 for site_id, cond in cur:
@@ -302,29 +300,36 @@ class Crosswalk_NCRMS_Site_Data(object):
                         collections[site_id] = True
                     else:
                          collections[site_id] = False
+            logger.log_all('Collections unique records: {}'.format(len(collections)))
 
             # Read in the domain mapping from CSV - necessary to keep up with source SHPO 'domain' changes
             domain_mapping = defaultdict(dict)
 
-            logger.log_all('Reading domain table..')
+            logger.console('Reading domain mapping table..')
             with open(domain_map_csv, 'r') as f:
                 csv_reader = csv.reader(f)
                 # Skip the header row
                 csv_reader.next()
                 for domain, src_val, dmn_val in csv_reader:
                     domain_mapping[domain][src_val] = dmn_val
+            for domain in domain_mapping.keys():
+                 logger.log_all('Found domain [{}]'.format(domain))
+                 logger.logfile('Found [{}] mapped values'.format(len(domain_mapping[domain])))
 
+            # TODO: Redo order
             NCRMS_fields = sorted(target_schema.keys())
             SHPO_fields = [
                 'SITE_', 'site_doc_id', 'site_doc_name', 'name',
                 'resource_type', 'culture',  'archaeology', 'site_type',
                 'NRC_A', 'NRC_B', 'NRC_C', 'NRC_D',
                 'feature', 'artifact',
-            ]
+                ]
+            logger.logfile('SHPO fields:\n{}'.format(SHPO_fields)
+            logger.logfile('NCRMS fields:\n{}'.format(NCRMS_fields)
+
             error_rows = []
-            logger.log_all('Iterating rows..')
+            logger.console('Iterating rows..')
             update_fields = ['OBJECTID'] + SHPO_fields + NCRMS_fields
-            logger.logfile('Update fields:', update_fields)
             report_ix = 1
 
             site_survey_mapping = []
@@ -580,7 +585,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                 # Delete the derived fields from failure (so can be input again)
                 # Delete unnecesarry fields
                 for field in arcpy.ListFields(failure):
-                    if field.name.startswith('TARGET_'):
+                    if field.name in NCRMS_fields:
                         try:
                             arcpy.DeleteField_management(failure, field.name)
                         except:
@@ -615,7 +620,10 @@ class Crosswalk_NCRMS_Site_Data(object):
 ###################################################################################################
 
         except Exception as ex:
-            logger.logfile(arcpy.GetMessages(2))
+            try:
+                logger.logfile(arcpy.GetMessages(2))
+            except:
+                arcpy.AddMessage(arcpy.GetMessages(2))
             arcpy.AddError(traceback.format_exc())
             
 
