@@ -5,12 +5,11 @@ import arcpy
 
 class pyt_log(object):
     """
-    A custom logging class that can simultaneously write to the console - AddMessage,
-    write to an optional logfile, and/or a production report...
+    A custom logging class to simultaneously write to the console and logfile.
+    Will unpack optional arguments to the logfile.
     """
        
-    def __init__(self, report_path, log_path):
-        self.report_path = report_path
+    def __init__(self, log_path):
         self.log_path = log_path
     
     def _write_arg(self, arg, path, starting_level=0):
@@ -55,22 +54,12 @@ class pyt_log(object):
         """Print to console only"""
         arcpy.AddMessage(msg)
 
-    def report(self, msg):
-        """Write to report only"""
-        self._writer(msg, path=self.report_path)
-
     def logfile(self, msg, *args):
         """Write to logfile only"""
         path = self.log_path
         self._writer(msg, path, *args)
-            
-    def log_report(self, msg, *args):
-        """Write to logfile and report only"""
-        self.report(msg)
-        self.logfile(msg, *args)
         
     def log_all(self, msg, *args):
         """Write to all"""
         self.console(msg)
-        self.report(msg)
         self.logfile(msg, *args)
