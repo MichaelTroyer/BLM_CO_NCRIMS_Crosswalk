@@ -1,4 +1,4 @@
-import dateutil.parser
+import dateutil
 import re
 
 import arcpy
@@ -86,10 +86,10 @@ def tryParseDate(date):
     try:
         try:
             parsedate = dateutil.parser.parse(date, **kwargs)
-            return parsedate
+            return parsedate.date()
         except ValueError:
             parsedate = dateutil.parser.parse(date, fuzzy=True, **kwargs)
-            return parsedate
+            return parsedate.date()
     except:
         return None
 

@@ -180,7 +180,6 @@ class Crosswalk_NCRMS_Site_Data(object):
             input_path = parameters[0].valueAsText
             output_path = parameters[1].valueAsText
 
-
             # Create the logger
             report_path = os.path.join(output_path, "BLM_CO_NCRMS_Crosswalk_Report_{}.txt".format(date_time_stamp))
             logger = pyt_log(report_path, log_path)
@@ -242,7 +241,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                 'RSRCE_NRHP_ELGBLE_AUTH_NM' : {'ALIAS': 'Resource NRHP Eligibility Authority Name', 'DOMAIN': 'CRM_DOM_ RSRCE_NRHP_ELGBLE_AUTH_NM', 'DEFAULT': 'NA', 'LENGTH': 35, 'TYPE': 'String',},
                 'RSRCE_CNDTN_ASSMNT'        : {'ALIAS': 'Resource Condition Assessment', 'DOMAIN': 'CRM_DOM_RSRCE_CNDTN_ASSMNT', 'DEFAULT': 'Unknown', 'LENGTH': 50, 'TYPE': 'String',},
                 'RSRCE_LAST_RCRD_DT'        : {'ALIAS': 'Resource Last Recorded Date', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 20, 'TYPE': 'String',},
-                'RSRCE_DATE'                : {'ALIAS': 'Resource Last Recorded Date in Date Format', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 8, 'TYPE': 'Date',},
+                'RSRCE_DATE'                : {'ALIAS': 'Resource Last Recorded Date in Date Format', 'DOMAIN': None, 'DEFAULT': None, 'LENGTH': 20, 'TYPE': 'Date',},
                 'RSRCE_CLCTN_PRFRM_STTS'    : {'ALIAS': 'Resource Collection Performed Status', 'DOMAIN': 'CRM_DOM_RSRCE_CLCTN_PRFRM_STTS', 'DEFAULT': 'Unknown', 'LENGTH': 20, 'TYPE': 'String',},
                 'RSRCE_DATA_SRCE'           : {'ALIAS': 'Resource Data Source', 'DOMAIN': 'CRM_DOM_DATA_SRCE', 'DEFAULT': 'Unknown', 'LENGTH': 25, 'TYPE': 'String',},
                 'RSRCE_SPTL_CLCTN_MTHD'     : {'ALIAS': 'Resource Spatial Collection Method', 'DOMAIN': 'CRM_DOM_SPTL_CLCTN_MTHD', 'DEFAULT': 'Unknown', 'LENGTH': 30, 'TYPE': 'String',},
@@ -261,7 +260,7 @@ class Crosswalk_NCRMS_Site_Data(object):
                     field_alias=field_params['ALIAS'],
                     field_domain=field_params['DOMAIN'],
                     )
-                logger.log_all('Added target field for [{}]'.format(field_name))
+                logger.log_all('Added field [{}]'.format(field_name))
  
             ### Get the related table data ###
             assessment_table = os.path.join(input_path, 'Assessment')
@@ -404,15 +403,22 @@ class Crosswalk_NCRMS_Site_Data(object):
                         # RSRCE_AGCY_ID = row[16]
                         row[16] = SITE_
 
+
+
                         # RSRCE_CAT = row[17]
                         if archaeology:
-                            archaeology = re.sub('HISTORIC>', '', archaeology)
-                            rsrce_cat = "{} {}".format(archaeology, site_type)
+                            archaeology = archaeology.replace('HISTORIC>', '')
+                            arch_items = [ai for ai in archaeology.split('>') if ai.strip()]
+                            site_types = [st for st in site_type.split('>') if st.strip()]
+                            rsrce_cats = set(arch_items + site_types)
+                            rsrce_cat = ', '.join(sorted(rsrce_cats))
                             row[17] = format_data(rsrce_cat, target_schema['RSRCE_CAT'])
                         else:
                             row[17] = None
                         # RSRCE_PRMRY_CAT_NM = row[28]
                         #TODO:
+
+
 
                         # RSRCE_CLCTN_PRFRM_STTS = row[18]
                         collection_status = collections.get(SITE_)
@@ -457,9 +463,11 @@ class Crosswalk_NCRMS_Site_Data(object):
                                 raise AssessmentDomainError(assess_val)
 
                             try:
-                                res_date = format_data(assess_date, target_schema['RSRCE_DATE'])
-                                row[22] = res_date  # datetime object
-                                row[23] = str(res_date.year) if res_date else None
+                                row[22] = assess_date
+                                try:
+                                    row[23] =  assess_date.year
+                                except:
+                                    row[23] = None
                             except Exception:
                                 raise AssessmentDateError(assess_date)
 
@@ -482,19 +490,18 @@ class Crosswalk_NCRMS_Site_Data(object):
                         row[30] = SITE_
 
                         # RSRCE_SITE_DOC_ID = row[31]
-                        #TODO: splpit these and write to CRM_RSRCE_INVSTGTN_TBL
                         if site_doc_id:
-                            doc_ids = site_doc_id.split('>')
+                            doc_ids = set([sid for sid in site_doc_id.split('>') if sid.strip()])
                             for doc_id in doc_ids:
-                                if doc_id:
-                                    doc_id = clean_string(doc_id)
-                                    site_survey_mapping.append((SITE_, doc_id)) 
-                            row[31] = format_data(site_doc_id, target_schema['RSRCE_SITE_DOC_ID'])
+                                site_survey_mapping.append((SITE_, doc_id))
+                            id_string = ', '.join(sorted(doc_ids))
+                            row[31] = format_data(id_string, target_schema['RSRCE_SITE_DOC_ID'])
                         else:
                             row[31] = None
 
                         # RSRCE_SITE_DOC_NAME = row[32]
                         if site_doc_name:
+                            site_doc_name = ', '.join(['{}'.format(s) for s in site_doc_name.split('>')])
                             row[32] = format_data(site_doc_name, target_schema['RSRCE_SITE_DOC_NAME'])
                         else:
                             row[32] = None
@@ -513,7 +520,8 @@ class Crosswalk_NCRMS_Site_Data(object):
                             row[34] = 'Unknown'
                         
                         # RSRCE_CMT = row[19]
-                        comments += '[ features: {} | artifacts: {} ]'.format(feature, artifact)
+                        comments += '[FEATURES: {}] '.format(feature.replace('>', ', ')) if feature else ''
+                        comments += '[ARTIFACTS: {}] '.format(artifact.replace('>', ', ')) if artifact else ''
                         row[19] = format_data(comments, target_schema['RSRCE_CMT'])
                         
                         ### Update row ###
