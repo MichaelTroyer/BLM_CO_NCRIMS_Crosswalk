@@ -102,11 +102,12 @@ class InvestigationAuthorityDomainError(BaseException):
 class InvestigationClassDomainError(BaseException):
     def __init__(self, val):
         self.val = val
-class InvestigationDateError(BaseException):
+class InvestigationLastDateError(BaseException):
     def __init__(self, val):
         self.val = val
-#TODO: Add survey Exceptions
-        
+class InvestigationCompletionDateError(BaseException):
+    def __init__(self, val):
+        self.val = val
 
 ###################################################################################################
 ##
@@ -976,7 +977,7 @@ class Crosswalk_NCRMS_Data(object):
                         DOC_       = clean_string(DOC_)
                         LAST_AGENC = clean_string(LAST_AGENC)
                         LAST_SOURC = clean_string(LAST_SOURC)
-                        # LAST_DATE_ = clean_string(LAST_DATE_)
+                        LAST_DATE_ = int(LAST_DATE_)
                         name       = clean_string(name)
                         lead_agenc = clean_string(lead_agenc)
                         institutio = clean_string(institutio)
@@ -1012,26 +1013,24 @@ class Crosswalk_NCRMS_Data(object):
                         # INVSTGTN_DATE = row[14] - use LAST_DATE_ and fillna with completion date
                         # INVSTGTN_CMPLT_MONTH_YR = row[13] from INVSTGTN_DATE
                         dates = 'last_date: [{}] - completion: [{}]'.format(LAST_DATE_, completion)
-                        if LAST_DATE_:
+                        if LAST_DATE_ > 30000:  # int days since 1/1/1900
                             try:
-                                row_date = start_date + timedelta(LAST_DATE_)  # int since 1/1/1900
+                                row_date = start_date + datetime.timedelta(LAST_DATE_)  
                                 row[14] = row_date
-                                row[15] = row_date.year + '-' + row_date.month
-                            except:
-                                try:
-                                    row_date = tryParseDate(completion)
-                                    row[14] = row_date
-                                    row[15] = row_date.year + '-' + row_date.month
-                                except Exception:
-                                    raise InvestigationDateError(dates)
+                                row[15] = '{}-{}'.format(row_date.year, row_date.month)
+                            except Exception as e:
+                                raise InvestigationLastDateError(LAST_DATE_)
                         elif completion:
                             try:
                                 row_date = tryParseDate(completion)
                                 row[14] = row_date
-                                row[15] = row_date.year + '-' + row_date.month
-                            except Exception:
-                                raise InvestigationDateError(dates)
-
+                                row[15] = '{}-{}'.format(row_date.year, row_date.month)
+                            except Exception as e:
+                                raise e
+                                # raise InvestigationCompletionDateError(completion)
+                        else:
+                            row[14] = None
+                            row[15] = None
                         
                         # INVSTGTN_LEAD_BLM_ADMIN_ST = row[15] - Default CO
                         row[15] = 'CO'
@@ -1096,19 +1095,23 @@ class Crosswalk_NCRMS_Data(object):
 
                     except InvestigationAuthorityDomainError as e:
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] InvestigationAuthorityDomainError: [OID: {}][SITE: {}][{}]\n{}'.format(OBJECTID, SITE_, e.val, traceback.format_exc()))
+                        logger.logfile('[-] InvestigationAuthorityDomainError: [OID: {}][DOC: {}][{}]\n{}'.format(OBJECTID, DOC_, e.val, traceback.format_exc()))
 
                     except InvestigationClassDomainError as e:
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] InvestigationClassDomainError: [OID: {}][SITE: {}][{}]\n{}'.format(OBJECTID, SITE_, e.val, traceback.format_exc()))
+                        logger.logfile('[-] InvestigationClassDomainError: [OID: {}][DOC: {}][{}]\n{}'.format(OBJECTID, DOC_, e.val, traceback.format_exc()))
+
+                    except InvestigationLastDateError as e:
+                        error_rows.append(OBJECTID)
+                        logger.logfile('[-] InvestigationLastDateError: [OID: {}][DOC: {}][{}]\n{}'.format(OBJECTID, DOC_, e.val, traceback.format_exc()))
+
+                    except InvestigationCompletionDateError as e:
+                        error_rows.append(OBJECTID)
+                        logger.logfile('[-] InvestigationCompletionDateError: [OID: {}][DOC: {}][{}]\n{}'.format(OBJECTID, DOC_, e.val, traceback.format_exc()))
 
                     except Exception:  # We're Off the rails
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, DOC_, traceback.format_exc()))
-
-                    except InvestigationDateError as e:
-                        error_rows.append(OBJECTID)
-                        logger.logfile('[-] InvestigationDateError: [OID: {}][SITE: {}][{}]\n{}'.format(OBJECTID, SITE_, e.val, traceback.format_exc()))
+                        logger.logfile('[-] Error: [OID: {}][DOC: {}]\n{}'.format(OBJECTID, DOC_, traceback.format_exc()))                    
 
                     finally:
                         report_ix += 1
