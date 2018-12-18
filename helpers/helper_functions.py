@@ -149,3 +149,9 @@ def parse_assessment_criteria(four_tuple):  # (A, B, C, D) - Yes/No
         if criteria[3]: return 'Eligible D Only'
     else:
         return 'Not Specified'
+
+
+#TODO: Please god test this!
+def extract_nepa_ids(string):
+    regex = r'DOI-BLM-CO-F[0-9oO]{1,5}-\d{2,4}-\d{1,4}[- ]\w+'  # Matching DOI-BLM-CO-F(digits, maybe oO)-date-seq type
+    return re.findall(regex, string)

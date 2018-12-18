@@ -1010,3 +1010,47 @@ CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT,Archaeological,Prehistoric
 CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT,Historical Archaeology,Historic
 CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT,Historic>Archaeological,Multicomponent
 CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT,Archaeological>Historical Archaeology,Multicomponent
+CRM_DOM_INVSTGTN_AUTH,106 Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,State Permits,Other
+CRM_DOM_INVSTGTN_AUTH,106 Compliance>106 Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,State Register Act Compliance,Other
+CRM_DOM_INVSTGTN_AUTH,PAAC Courses,Other
+CRM_DOM_INVSTGTN_AUTH,Compliance>Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,SHF-Survey & Planning,Other
+CRM_DOM_INVSTGTN_AUTH,Compliance>Local Government/Private Compliance,Other
+CRM_DOM_INVSTGTN_AUTH,State Permits>State Permits>State Permits>State Permits,Other
+CRM_DOM_INVSTGTN_AUTH,Paleontological,Other
+CRM_DOM_INVSTGTN_AUTH,110,Section 110
+CRM_DOM_INVSTGTN_AUTH,State Permits>Local Government/Private Compliance,Other
+CRM_DOM_INVSTGTN_AUTH,Certified Local Government,Other
+CRM_DOM_INVSTGTN_AUTH,State Permits>State Permits,Other
+CRM_DOM_INVSTGTN_AUTH,106 Compliance>106 Compliance>106 Compliance>106 Compliance>106 Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,Local Government/Private Compliance,Other
+CRM_DOM_INVSTGTN_AUTH,State Permits>State Permits>Compliance,Other
+CRM_DOM_INVSTGTN_AUTH,State Register,Other
+CRM_DOM_INVSTGTN_AUTH,106 Compliance>106 Compliance>106 Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,106 Compliance>106 Compliance>106 Compliance>106 Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,106 Compliance>Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,Compliance>106 Compliance,Section 106
+CRM_DOM_INVSTGTN_AUTH,106 Compliance>Paleontological,Section 106
+CRM_DOM_INVSTGTN_CL,CLASS III,Class III Inventory
+CRM_DOM_INVSTGTN_CL,RECONNAISSANCE SURVEY,Class II Inventory
+CRM_DOM_INVSTGTN_CL,Paleontological Survey>RECONNAISSANCE SURVEY,Class II Inventory
+CRM_DOM_INVSTGTN_CL,CLASS II,Class II Inventory
+CRM_DOM_INVSTGTN_CL,Historic Survey - CIII,Class III Inventory
+CRM_DOM_INVSTGTN_CL,CLASS III>Paleontological Survey,Class III Inventory
+CRM_DOM_INVSTGTN_CL,Paleontological Survey,Other
+CRM_DOM_INVSTGTN_CL,Archaeology Survey - CIII,Class III Inventory
+CRM_DOM_INVSTGTN_CL,Class II-Pred Model,Class II Inventory
+CRM_DOM_INVSTGTN_CL,CLASS III>CLASS III,Class III Inventory
+CRM_DOM_INVSTGTN_CL,CLASS II>CLASS III,Class II and Class III
+CRM_DOM_INVSTGTN_CL,CLASS III>Historic Survey - CII,Class II and Class III
+CRM_DOM_INVSTGTN_CL,Historic Survey - CII,Class II Inventory
+CRM_DOM_INVSTGTN_CL,Survey - Level Unspecified,Unknown
+CRM_DOM_INVSTGTN_CL,CLASS III>CLASS II,Class II and Class III
+CRM_DOM_INVSTGTN_CL,Paleontological Survey>CLASS III,Class III Inventory
+CRM_DOM_INVSTGTN_CL,CLASS III>RESURVEY,Class III Inventory
+CRM_DOM_INVSTGTN_CL,Archaeology Survey - CII,Class II Inventory
+CRM_DOM_INVSTGTN_CL,CLASS II>RECONNAISSANCE SURVEY,Class II Inventory
+CRM_DOM_INVSTGTN_CL,Archaeology Survey - CIII>CLASS III,Class III Inventory

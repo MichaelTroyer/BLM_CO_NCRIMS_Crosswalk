@@ -1,0 +1,23 @@
+NAME,ALIAS,TYPE,LENGTH,PRECISION,SCALE,DEFAULT,DOMAIN,EDITABLE,ISNULLABLE,REQUIRED,UNIQUE
+OBJECTID,OBJECTID,OID,4,0,0,,,False,False,True,0
+SHAPE,SHAPE,Geometry,0,0,0,,,True,True,True,0
+CRM_INVSTGTN_ID,CRM Investigation Unique Identifier,String,50,0,0,,,True,True,False,0
+INVSTGTN_AGCY_ID,Agency Investigation Unique Identifier,String,50,0,0,,,True,True,False,0
+INVSTGTN_SHPO_ID,State Investigation Unique Identifier,String,50,0,0,,,True,True,False,0
+INVSTGTN_CMPLT_MONTH_YR,Investigation Completed Month and Year,String,20,0,0,,,True,True,False,0
+INVSTGTN_DATE,Investigation Completed Date,Date,8,0,0,,,True,True,False,0
+INVSTGTN_LEAD_BLM_ADMIN_ST,Investigation Lead BLM Administrative State,String,2,0,0,,DOM_ADMIN_ST,True,True,False,0
+INVSTGTN_TITLE,Investigation Title,String,255,0,0,,,True,True,False,0
+INVSTGTN_AUTH,Investigation Authority,String,50,0,0,Unknown,CRM_DOM_INVSTGTN_AUTH,True,False,False,0
+INVSTGTN_CL,Investigation Class,String,30,0,0,Unknown,CRM_DOM_INVSTGTN_CL,True,False,False,0
+INVSTGTN_PRFRM_PARTY_NM,Investigation Performed By Party Name,String,100,0,0,,,True,True,False,0
+INVSTGTN_NEPA_ID,Investigation NEPA Identifier,String,50,0,0,,,True,True,False,0
+INVSTGTN_DATA_SRCE,Investigation Data Source,String,25,0,0,Unknown,CRM_DOM_DATA_SRCE,True,False,False,0
+INVSTGTN_CMT,Investigation Comments,String,2000,0,0,,,True,True,False,0
+ADMIN_ST,Administrative State Code,String,2,0,0,,DOM_ADMIN_ST,True,True,False,0
+GIS_ACRES,GIS Acres,Double,8,0,0,,,True,True,False,0
+BLM_ACRES,BLM Acres,Double,8,0,0,,,True,True,False,0
+CREATE_DATE,Created Date,Date,8,0,0,,,True,True,False,0
+CREATE_BY,Created By Name,String,30,0,0,,,True,True,False,0
+SHAPE_Length,SHAPE_Length,Double,8,0,0,,,False,True,True,0
+SHAPE_Area,SHAPE_Area,Double,8,0,0,,,False,True,True,0
