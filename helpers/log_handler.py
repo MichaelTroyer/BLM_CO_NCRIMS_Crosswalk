@@ -16,8 +16,6 @@ class pyt_log(object):
         """Accepts a [path] txt from open(path) and unpacks the data [arg]"""
         level = starting_level
         txtfile = open(path, 'a')
-        if level == 0:
-            txtfile.write("_"*80)
         if type(arg) == dict:
             txtfile.write("\n"+(level*"\t")+(str(arg))+"\n")
             txtfile.write((level*"\t")+str(type(arg))+"\n")
@@ -32,7 +30,6 @@ class pyt_log(object):
             txtfile.write("\n"+(level*"\t")+(str(arg))+"\n")
             txtfile.write((level*"\t")+str(type(arg))+"\n")
             if hasattr(arg, '__iter__'): #does not include strings
-                txtfile.write((level*"\t")+"Iterables:"+"\n")
                 txtfile.close()
                 for a in arg:
                     self._write_arg(a, path, starting_level=level+1)

@@ -77,37 +77,6 @@ date_time_stamp = re.sub('[^0-9]', '', str(start_time)[2:16])
 gdb_template_xml = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\database_schema.xml'
 domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\domain_map.csv'
 
-### Exceptions - pass w/ val - offending data
-class ConditionDomainError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class AssessmentDomainError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class AssessmentDateError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class AssessmentAuthorityDomainError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class AssessmentCriteriaDomainError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class TemporalAssessmentDomainError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class InvestigationAuthorityDomainError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class InvestigationClassDomainError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class InvestigationLastDateError(BaseException):
-    def __init__(self, val):
-        self.val = val
-class InvestigationCompletionDateError(BaseException):
-    def __init__(self, val):
-        self.val = val
 
 ###################################################################################################
 ##
@@ -272,7 +241,7 @@ class Crosswalk_NCRMS_Data(object):
 
             #######################################################################################
             ##
-            ## SITES
+            ## RESOURCES
             ##
             #######################################################################################
 
@@ -305,160 +274,28 @@ class Crosswalk_NCRMS_Data(object):
             ### Add the target fields ###
             target_schema = OrderedDict()  # remembers insert order for iteration
             for key, val in [
-                ('RSRCE_AGCY_ID', {
-                    'ALIAS': 'Agency Resource Identifier',
-                    'TYPE': 'String',
-                    'LENGTH': 50,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('RSRCE_SHPO_ID', {
-                    'ALIAS': 'SHPO Database Resource Identifier',
-                    'TYPE': 'String',
-                    'LENGTH': 50,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('RSRCE_NM', {
-                    'ALIAS': 'Resource Name',
-                    'TYPE': 'String',
-                    'LENGTH': 255,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('RSRCE_TMPRL_CLTRL_ASGNMNT', {
-                    'ALIAS': 'Resource Temporal Cultural Assignment',
-                    'TYPE': 'String',
-                    'LENGTH': 50,
-                    'DOMAIN': 'CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT',
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('RSRCE_PRMRY_PRPRTY_CL', {
-                    'ALIAS': 'Resource Primary Property Class',
-                    'TYPE': 'String',
-                    'LENGTH': 30,
-                    'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_PRPRTY_CL',
-                    'DEFAULT': 'Site',
-                    }),
-                ('RSRCE_PRMRY_CAT_NM', {
-                    'ALIAS': 'Resource Primary Category Name',
-                    'TYPE': 'String',
-                    'LENGTH': 30,
-                    'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_CAT',
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('RSRCE_CAT', {
-                    'ALIAS': 'Resource Category',
-                    'TYPE': 'String',
-                    'LENGTH': 2000,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('RSRCE_NRHP_ELGBLE_STTS', {
-                    'ALIAS': 'Resource NRHP Eligibility Status',
-                    'TYPE': 'String',
-                    'LENGTH': 12,
-                    'DOMAIN': 'DOM_YES_NO_UNDTRMND',
-                    'DEFAULT': 'Undetermined',
-                    }),
-                ('RSRCE_NRHP_ELGBLE_CRTRA', {
-                    'ALIAS': 'NRHP Eligibility Criteria',
-                    'TYPE': 'String',
-                    'LENGTH': 35,
-                    'DOMAIN': 'CRM_DOM_RSRCE_NRHP_ELGBLE_CRTRA',
-                    'DEFAULT': 'Not Specified',
-                    }),
-                ('RSRCE_NRHP_ELGBLE_AUTH_NM', {
-                    'ALIAS': 'Resource NRHP Eligibility Authority Name',
-                    'TYPE': 'String',
-                    'LENGTH': 35,
-                    'DOMAIN': 'CRM_DOM_ RSRCE_NRHP_ELGBLE_AUTH_NM',
-                    'DEFAULT': 'NA',
-                    }),
-                ('RSRCE_CNDTN_ASSMNT', {
-                    'ALIAS': 'Resource Condition Assessment',
-                    'TYPE': 'String',
-                    'LENGTH': 50,
-                    'DOMAIN': 'CRM_DOM_RSRCE_CNDTN_ASSMNT',
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('RSRCE_LAST_RCRD_DT', {
-                    'ALIAS': 'Resource Last Recorded Date',
-                    'TYPE': 'String',
-                    'LENGTH': 20,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('RSRCE_DATE', {
-                    'ALIAS': 'Resource Last Recorded Date in Date Format',
-                    'TYPE': 'Date',
-                    'LENGTH': 20,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('RSRCE_CLCTN_PRFRM_STTS', {
-                    'ALIAS': 'Resource Collection Performed Status',
-                    'TYPE': 'String',
-                    'LENGTH': 20,
-                    'DOMAIN': 'CRM_DOM_RSRCE_CLCTN_PRFRM_STTS',
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('RSRCE_DATA_SRCE', {
-                    'ALIAS': 'Resource Data Source',
-                    'TYPE': 'String',
-                    'LENGTH': 25,
-                    'DOMAIN': 'CRM_DOM_DATA_SRCE',
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('RSRCE_SPTL_CLCTN_MTHD', {
-                    'ALIAS': 'Resource Spatial Collection Method',
-                    'TYPE': 'String',
-                    'LENGTH': 30,
-                    'DOMAIN': 'CRM_DOM_SPTL_CLCTN_MTHD',
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('RSRCE_CMT', {
-                    'ALIAS': 'Resource Comments',
-                    'TYPE': 'String',
-                    'LENGTH': 2000,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('RSRCE_SITE_DOC_ID', {
-                    'ALIAS': 'Report ID',
-                    'TYPE': 'String',
-                    'LENGTH': 255,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('RSRCE_SITE_DOC_NAME', {
-                    'ALIAS': 'Report Name',
-                    'TYPE': 'String',
-                    'LENGTH': 2000,
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('ADMIN_ST', {
-                    'ALIAS': 'Administrative State Code',
-                    'TYPE': 'String',
-                    'LENGTH': 2,
-                    'DOMAIN': 'DOM_ADMIN_ST',
-                    'DEFAULT': None,
-                    }),
-                ('GIS_ACRES', {
-                    'ALIAS': 'GIS Acres',
-                    'TYPE': 'Double',
-                    'LENGTH': 20, 
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('BLM_ACRES', {
-                    'ALIAS': 'BLM Acres',
-                    'TYPE': 'Double',
-                    'LENGTH': 20, 
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
+                ('RSRCE_AGCY_ID', {'ALIAS': 'Agency Resource Identifier','TYPE': 'String','LENGTH': 50,'DOMAIN': None,'DEFAULT': None,}),
+                ('RSRCE_SHPO_ID', {'ALIAS': 'SHPO Database Resource Identifier','TYPE': 'String','LENGTH': 50,'DOMAIN': None,'DEFAULT': None,}),
+                ('RSRCE_NM', {'ALIAS': 'Resource Name','TYPE': 'String','LENGTH': 255,'DOMAIN': None,'DEFAULT': None,}),
+                ('RSRCE_TMPRL_CLTRL_ASGNMNT', {'ALIAS': 'Resource Temporal Cultural Assignment','TYPE': 'String','LENGTH': 50,'DOMAIN': 'CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT','DEFAULT': 'Unknown',}),
+                ('RSRCE_PRMRY_PRPRTY_CL', {'ALIAS': 'Resource Primary Property Class','TYPE': 'String','LENGTH': 30,'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_PRPRTY_CL','DEFAULT': 'Site',}),
+                ('RSRCE_PRMRY_CAT_NM', {'ALIAS': 'Resource Primary Category Name','TYPE': 'String','LENGTH': 30,'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_CAT','DEFAULT': 'Unknown',}),
+                ('RSRCE_CAT', {'ALIAS': 'Resource Category','TYPE': 'String','LENGTH': 2000,'DOMAIN': None,'DEFAULT': None,}),
+                ('RSRCE_NRHP_ELGBLE_STTS', {'ALIAS': 'Resource NRHP Eligibility Status','TYPE': 'String','LENGTH': 12,'DOMAIN': 'DOM_YES_NO_UNDTRMND','DEFAULT': 'Undetermined',}),
+                ('RSRCE_NRHP_ELGBLE_CRTRA', {'ALIAS': 'NRHP Eligibility Criteria','TYPE': 'String','LENGTH': 35,'DOMAIN': 'CRM_DOM_RSRCE_NRHP_ELGBLE_CRTRA','DEFAULT': 'Not Specified',}),
+                ('RSRCE_NRHP_ELGBLE_AUTH_NM', {'ALIAS': 'Resource NRHP Eligibility Authority Name','TYPE': 'String','LENGTH': 35,'DOMAIN': 'CRM_DOM_ RSRCE_NRHP_ELGBLE_AUTH_NM','DEFAULT': 'NA',}),
+                ('RSRCE_CNDTN_ASSMNT', {'ALIAS': 'Resource Condition Assessment','TYPE': 'String','LENGTH': 50,'DOMAIN': 'CRM_DOM_RSRCE_CNDTN_ASSMNT','DEFAULT': 'Unknown',}),
+                ('RSRCE_LAST_RCRD_DT', {'ALIAS': 'Resource Last Recorded Date','TYPE': 'String','LENGTH': 20,'DOMAIN': None,'DEFAULT': None,}),
+                ('RSRCE_DATE', {'ALIAS': 'Resource Last Recorded Date in Date Format','TYPE': 'Date','LENGTH': 20,'DOMAIN': None,'DEFAULT': None,}),
+                ('RSRCE_CLCTN_PRFRM_STTS', {'ALIAS': 'Resource Collection Performed Status','TYPE': 'String','LENGTH': 20,'DOMAIN': 'CRM_DOM_RSRCE_CLCTN_PRFRM_STTS','DEFAULT': 'Unknown',}),
+                ('RSRCE_DATA_SRCE', {'ALIAS': 'Resource Data Source','TYPE': 'String','LENGTH': 25,'DOMAIN': 'CRM_DOM_DATA_SRCE','DEFAULT': 'Unknown',}),
+                ('RSRCE_SPTL_CLCTN_MTHD', {'ALIAS': 'Resource Spatial Collection Method','TYPE': 'String','LENGTH': 30,'DOMAIN': 'CRM_DOM_SPTL_CLCTN_MTHD','DEFAULT': 'Unknown',}),
+                ('RSRCE_CMT', {'ALIAS': 'Resource Comments','TYPE': 'String','LENGTH': 2000,'DOMAIN': None,'DEFAULT': None,}),
+                ('RSRCE_SITE_DOC_ID', {'ALIAS': 'Report ID','TYPE': 'String','LENGTH': 255,'DOMAIN': None,'DEFAULT': None,}),
+                ('RSRCE_SITE_DOC_NAME', {'ALIAS': 'Report Name','TYPE': 'String','LENGTH': 2000,'DOMAIN': None,'DEFAULT': None,}),
+                ('ADMIN_ST', {'ALIAS': 'Administrative State Code','TYPE': 'String','LENGTH': 2,'DOMAIN': 'DOM_ADMIN_ST','DEFAULT': None,}),
+                ('GIS_ACRES', {'ALIAS': 'GIS Acres','TYPE': 'Double','LENGTH': 20, 'DOMAIN': None,'DEFAULT': None,}),
+                ('BLM_ACRES', {'ALIAS': 'BLM Acres','TYPE': 'Double','LENGTH': 20, 'DOMAIN': None,'DEFAULT': None,}),
                 ]: 
                 target_schema[key] = val
 
@@ -476,10 +313,8 @@ class Crosswalk_NCRMS_Data(object):
             # NCRMS_fields = sorted(target_schema.keys())
             NCRMS_fields = target_schema.keys()
             SHPO_fields = [
-                'SITE_', 'site_doc_id', 'site_doc_name', 'name',
-                'resource_type', 'culture',  'archaeology', 'site_type',
-                'NRC_A', 'NRC_B', 'NRC_C', 'NRC_D',
-                'feature', 'artifact',
+                'SITE_', 'site_doc_id', 'site_doc_name', 'name', 'resource_type', 'culture',  'archaeology', 'site_type',
+                'NRC_A', 'NRC_B', 'NRC_C', 'NRC_D', 'feature', 'artifact',
                 ]
             logger.logfile('SHPO fields:\n{}'.format(SHPO_fields))
             logger.logfile('NCRMS fields:\n{}'.format(NCRMS_fields))
@@ -493,7 +328,7 @@ class Crosswalk_NCRMS_Data(object):
 
             #######################################################################################
             ##
-            ## SITES MAIN PROCESSING LOOP
+            ## RESOURCES MAIN PROCESSING LOOP
             ##
             #######################################################################################
 
@@ -577,8 +412,8 @@ class Crosswalk_NCRMS_Data(object):
                             try:
                                 res_type = map_domain_values(resource_type, domain_mapping['CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT'])
                                 row[18] = format_data(res_type, target_schema['RSRCE_TMPRL_CLTRL_ASGNMNT'])
-                            except Exception:
-                                raise TemporalAssessmentDomainError(resource_type)
+                            except Exception as e:
+                                raise ValueError('Resource Type Error', resource_type, e)
                         else:
                             row[18] = 'Unknown'
 
@@ -620,8 +455,8 @@ class Crosswalk_NCRMS_Data(object):
                             try:
                                 dom_cnd = map_domain_values(cnd_val, domain_mapping['CRM_DOM_RSRCE_CNDTN_ASSMNT'])
                                 row[25] = format_data(dom_cnd, target_schema['RSRCE_CNDTN_ASSMNT'])
-                            except Exception:
-                                raise ConditionDomainError(cnd)
+                            except Exception as e:
+                                raise ValueError('Condition Error', cnd, e)
                         else:
                             row[25] = 'Unknown'                    
 
@@ -638,8 +473,8 @@ class Crosswalk_NCRMS_Data(object):
 
                             try:
                                 row[22] = map_domain_values(assess_val, domain_mapping['DOM_YES_NO_UNDTRMND'])
-                            except Exception:
-                                raise AssessmentDomainError(assess_val)
+                            except Exception as e:
+                                raise ValueError('Assessment Error', assess_val, e)
 
                             try:
                                 row[27] = assess_date
@@ -647,18 +482,18 @@ class Crosswalk_NCRMS_Data(object):
                                     row[26] = assess_date.year
                                 except:
                                     row[26] = None
-                            except Exception:
-                                raise AssessmentDateError(assess_date)
+                            except Exception as e:
+                                raise ValueError('Assessment Date Error', assess_date, e)
 
                             try:
                                 row[24] = map_domain_values(assess_val, domain_mapping['CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM'])
-                            except Exception:
-                                raise AssessmentAuthorityDomainError(assess_val)
+                            except Exception as e:
+                                raise ValueError('Assessment Domain Error', assess_val, e)
 
                             try:
                                 row[23] = parse_assessment_criteria((NRC_A, NRC_B, NRC_C, NRC_D))
-                            except Exception:
-                                raise AssessmentCriteriaDomainError((NRC_A, NRC_B, NRC_C, NRC_D))
+                            except Exception as e:
+                                raise ValueError('Parse Assessment Error', (NRC_A, NRC_B, NRC_C, NRC_D), e)
                         else:
                             row[27], row[26], row[24], row[23], row[22] = None, None, 'NA', None, 'Unknown'
 
@@ -700,25 +535,13 @@ class Crosswalk_NCRMS_Data(object):
                         ### Update row ###
                         cur.updateRow(row)
                                        
-                    except TemporalAssessmentDomainError as e:
+                    except ValueError as e:
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] TemporalAssessmentDomainError: [OID: {}][SITE: {}][{}]\n{}'.format(OBJECTID, SITE_, e.val, traceback.format_exc()))
-                    except ConditionDomainError as e:
-                        error_rows.append(OBJECTID)
-                        logger.logfile('[-] ConditionDomainError: [OID: {}][SITE: {}][{}]\n{}'.format(OBJECTID, SITE_, e.val, traceback.format_exc()))
-                    except AssessmentDomainError as e:
-                        error_rows.append(OBJECTID)
-                        logger.logfile('[-] AssessmentDomainError: [OID: {}][SITE: {}][{}]\n{}'.format(OBJECTID, SITE_, e.val, traceback.format_exc()))
-                    except AssessmentDateError as e:
-                        error_rows.append(OBJECTID)
-                        logger.logfile('[-] AssessmentDateError: [OID: {}][SITE: {}][{}]\n{}'.format(OBJECTID, SITE_, e.val, traceback.format_exc()))
-                    except AssessmentAuthorityDomainError as e:
-                        error_rows.append(OBJECTID)
-                        logger.logfile('[-] AssessmentAuthorityDomainError: [OID: {}][SITE: {}][{}]\n{}'.format(OBJECTID, SITE_, e.val, traceback.format_exc()))
+                        logger.logfile('[-] Error: [OID: {}][SITE: {}]\n{}\n{}'.format(OBJECTID, SITE_, traceback.format_exc(), e))  
 
-                    except Exception:  # We're Off the rails
+                    except:  # We're Off the rails
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
+                        logger.logfile('[-] Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc())) 
 
                     finally:
                         report_ix += 1
@@ -774,7 +597,7 @@ class Crosswalk_NCRMS_Data(object):
             
             #######################################################################################
             ##
-            ## SURVEYS
+            ## INVESTIGATIONS
             ##
             #######################################################################################
 
@@ -807,110 +630,21 @@ class Crosswalk_NCRMS_Data(object):
             ### Add the target fields ###
             target_schema = OrderedDict()  # remembers insert order for iteration
             for key, val in [
-                ('INVSTGTN_AGCY_ID', {
-                    'ALIAS': 'Agency Investigation Unique Identifier',
-                    'TYPE': 'String',
-                    'LENGTH': 50,
-                    'DOMAIN': None, 
-                    'DEFAULT': None,
-                    }),
-                ('INVSTGTN_SHPO_ID', {
-                    'ALIAS': 'State Investigation Unique Identifier',
-                    'TYPE': 'String',
-                    'LENGTH': 50,
-                    'DOMAIN': None, 
-                    'DEFAULT': None,
-                    }),
-                ('INVSTGTN_CMPLT_MONTH_YR', {
-                    'ALIAS': 'Investigation Completed Month and Year',
-                    'TYPE': 'String',
-                    'LENGTH': 20, 
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('INVSTGTN_DATE', {
-                    'ALIAS': 'Investigation Completed Date',
-                    'TYPE': 'Date',
-                    'LENGTH': 20, 
-                    'DOMAIN': None,
-                    'DEFAULT': None}),
-                ('INVSTGTN_LEAD_BLM_ADMIN_ST', {
-                    'ALIAS': 'Investigation Lead BLM Administrative State',
-                    'TYPE': 'String',
-                    'LENGTH': 2,
-                    'DOMAIN': 'DOM_ADMIN_ST',
-                    'DEFAULT': 'CO',
-                    }),
-                ('INVSTGTN_TITLE', {
-                    'ALIAS': 'Investigation Title',
-                    'TYPE': 'String',
-                    'LENGTH': 255, 
-                    'DOMAIN': None, 
-                    'DEFAULT': None,
-                    }),
-                ('INVSTGTN_AUTH', {
-                    'ALIAS': 'Investigation Authority', 
-                    'TYPE': 'String',
-                    'LENGTH': 50,
-                    'DOMAIN': 'CRM_DOM_INVSTGTN_AUTH',
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('INVSTGTN_CL', {
-                    'ALIAS': 'Investigation Class',
-                    'TYPE': 'String',
-                    'LENGTH': 30, 
-                    'DOMAIN': 'CRM_DOM_INVSTGTN_CL',
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('INVSTGTN_PRFRM_PARTY_NM', {
-                    'ALIAS': 'Investigation Performed By Party Name',
-                    'TYPE': 'String',
-                    'LENGTH': 100, 
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('INVSTGTN_NEPA_ID', {
-                    'ALIAS': 'Investigation NEPA Identifier',
-                    'TYPE': 'String',
-                    'LENGTH': 50,
-                    'DOMAIN': None, 
-                    'DEFAULT': None,
-                    }),
-                ('INVSTGTN_DATA_SRCE', {
-                    'ALIAS': 'Investigation Data Source',
-                    'TYPE': 'String',
-                    'LENGTH': 25,
-                    'DOMAIN': 'CRM_DOM_DATA_SRCE', 
-                    'DEFAULT': 'Unknown',
-                    }),
-                ('INVSTGTN_CMT', {
-                    'ALIAS': 'Investigation Comments',
-                    'TYPE': 'String',
-                    'LENGTH': 2000, 
-                    'DOMAIN': None,
-                    'DEFAULT': None, 
-                    }),
-                ('ADMIN_ST', {
-                    'ALIAS': 'Administartive State Code',
-                    'TYPE': 'String',
-                    'LENGTH': 2, 
-                    'DOMAIN': 'DOM_ADMIN_ST',
-                    'DEFAULT': None,
-                    }),
-                ('GIS_ACRES', {
-                    'ALIAS': 'GIS Acres',
-                    'TYPE': 'Double',
-                    'LENGTH': 20, 
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
-                ('BLM_ACRES', {
-                    'ALIAS': 'BLM Acres',
-                    'TYPE': 'Double',
-                    'LENGTH': 20, 
-                    'DOMAIN': None,
-                    'DEFAULT': None,
-                    }),
+                ('INVSTGTN_AGCY_ID', {'ALIAS': 'Agency Investigation Unique Identifier','TYPE': 'String','LENGTH': 50,'DOMAIN': None, 'DEFAULT': None,}),
+                ('INVSTGTN_SHPO_ID', {'ALIAS': 'State Investigation Unique Identifier','TYPE': 'String','LENGTH': 50,'DOMAIN': None, 'DEFAULT': None,}),
+                ('INVSTGTN_CMPLT_MONTH_YR', {'ALIAS': 'Investigation Completed Month and Year','TYPE': 'String','LENGTH': 20, 'DOMAIN': None,'DEFAULT': None,}),
+                ('INVSTGTN_DATE', {'ALIAS': 'Investigation Completed Date','TYPE': 'Date','LENGTH': 20, 'DOMAIN': None,'DEFAULT': None}),
+                ('INVSTGTN_LEAD_BLM_ADMIN_ST', {'ALIAS': 'Investigation Lead BLM Administrative State','TYPE': 'String','LENGTH': 2,'DOMAIN': 'DOM_ADMIN_ST','DEFAULT': 'CO',}),
+                ('INVSTGTN_TITLE', {'ALIAS': 'Investigation Title','TYPE': 'String','LENGTH': 255, 'DOMAIN': None, 'DEFAULT': None,}),
+                ('INVSTGTN_AUTH', {'ALIAS': 'Investigation Authority', 'TYPE': 'String','LENGTH': 50,'DOMAIN': 'CRM_DOM_INVSTGTN_AUTH','DEFAULT': 'Unknown',}),
+                ('INVSTGTN_CL', {'ALIAS': 'Investigation Class','TYPE': 'String','LENGTH': 30, 'DOMAIN': 'CRM_DOM_INVSTGTN_CL','DEFAULT': 'Unknown',}),
+                ('INVSTGTN_PRFRM_PARTY_NM', {'ALIAS': 'Investigation Performed By Party Name','TYPE': 'String','LENGTH': 100, 'DOMAIN': None,'DEFAULT': None,}),
+                ('INVSTGTN_NEPA_ID', {'ALIAS': 'Investigation NEPA Identifier','TYPE': 'String','LENGTH': 50,'DOMAIN': None, 'DEFAULT': None,}),
+                ('INVSTGTN_DATA_SRCE', {'ALIAS': 'Investigation Data Source','TYPE': 'String','LENGTH': 25,'DOMAIN': 'CRM_DOM_DATA_SRCE', 'DEFAULT': 'Unknown',}),
+                ('INVSTGTN_CMT', {'ALIAS': 'Investigation Comments','TYPE': 'String','LENGTH': 2000, 'DOMAIN': None,'DEFAULT': None, }),
+                ('ADMIN_ST', {'ALIAS': 'Administartive State Code','TYPE': 'String','LENGTH': 2, 'DOMAIN': 'DOM_ADMIN_ST','DEFAULT': None,}),
+                ('GIS_ACRES', {'ALIAS': 'GIS Acres','TYPE': 'Double','LENGTH': 20, 'DOMAIN': None,'DEFAULT': None,}),
+                ('BLM_ACRES', {'ALIAS': 'BLM Acres','TYPE': 'Double','LENGTH': 20, 'DOMAIN': None,'DEFAULT': None,}),
                 ]: 
                 target_schema[key] = val
 
@@ -927,16 +661,7 @@ class Crosswalk_NCRMS_Data(object):
 
             NCRMS_fields = target_schema.keys()
             SHPO_fields = [
-                'DOC_',
-                'LAST_AGENC',
-                'LAST_SOURC',
-                'LAST_DATE_',
-                'name',
-                'lead_agenc',
-                'institutio',
-                'method',
-                'completion',
-                'activity',
+                'DOC_', 'LAST_AGENC', 'LAST_SOURC', 'LAST_DATE_', 'name', 'lead_agenc', 'institutio', 'method', 'completion', 'activity',
                 ]
 
             logger.logfile('SHPO investigation fields:\n{}'.format(SHPO_fields))
@@ -951,7 +676,7 @@ class Crosswalk_NCRMS_Data(object):
 
             #######################################################################################
             ##
-            ## SURVEYS MAIN PROCESSING LOOP
+            ## INVESTIGATIONS MAIN PROCESSING LOOP
             ##
             #######################################################################################
 
@@ -1019,15 +744,15 @@ class Crosswalk_NCRMS_Data(object):
                                 row[14] = row_date
                                 row[15] = '{}-{}'.format(row_date.year, row_date.month)
                             except Exception as e:
-                                raise InvestigationLastDateError(LAST_DATE_)
+                                raise ValueError('LAST_DATE_ Error', LAST_DATE_, e)
                         elif completion:
                             try:
                                 row_date = tryParseDate(completion)
                                 row[14] = row_date
                                 row[15] = '{}-{}'.format(row_date.year, row_date.month)
                             except Exception as e:
-                                raise e
-                                # raise InvestigationCompletionDateError(completion)
+                                raise ValueError('Completion Date Error', completion, e)
+
                         else:
                             row[14] = None
                             row[15] = None
@@ -1043,8 +768,8 @@ class Crosswalk_NCRMS_Data(object):
                             try:
                                 activity = map_domain_values(activity, domain_mapping['CRM_DOM_INVSTGTN_AUTH'])
                                 row[17] = format_data(activity, target_schema['INVSTGTN_AUTH'])
-                            except Exception:
-                                raise InvestigationAuthorityDomainError(activity)
+                            except Exception as e:
+                                raise ValueError('Activity Error', activity, e)
                         else:
                             row[17] = 'Unknown'
 
@@ -1053,8 +778,8 @@ class Crosswalk_NCRMS_Data(object):
                             try:
                                 method = map_domain_values(method, domain_mapping['CRM_DOM_INVSTGTN_CL'])
                                 row[18] = format_data(method, target_schema['INVSTGTN_CL'])
-                            except Exception:
-                                raise InvestigationClassDomainError(method)
+                            except Exception as e:
+                                raise ValueError('Method Error', method, e)
                         else:
                             row[18] = 'Unknown'
 
@@ -1091,25 +816,12 @@ class Crosswalk_NCRMS_Data(object):
 
                         ### Update row ###
                         cur.updateRow(row)
-
-
-                    except InvestigationAuthorityDomainError as e:
+   
+                    except ValueError:
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] InvestigationAuthorityDomainError: [OID: {}][DOC: {}][{}]\n{}'.format(OBJECTID, DOC_, e.val, traceback.format_exc()))
+                        logger.logfile('[-] Error: [OID: {}][DOC: {}]\n{}'.format(OBJECTID, DOC_, traceback.format_exc()))  
 
-                    except InvestigationClassDomainError as e:
-                        error_rows.append(OBJECTID)
-                        logger.logfile('[-] InvestigationClassDomainError: [OID: {}][DOC: {}][{}]\n{}'.format(OBJECTID, DOC_, e.val, traceback.format_exc()))
-
-                    except InvestigationLastDateError as e:
-                        error_rows.append(OBJECTID)
-                        logger.logfile('[-] InvestigationLastDateError: [OID: {}][DOC: {}][{}]\n{}'.format(OBJECTID, DOC_, e.val, traceback.format_exc()))
-
-                    except InvestigationCompletionDateError as e:
-                        error_rows.append(OBJECTID)
-                        logger.logfile('[-] InvestigationCompletionDateError: [OID: {}][DOC: {}][{}]\n{}'.format(OBJECTID, DOC_, e.val, traceback.format_exc()))
-
-                    except Exception:  # We're Off the rails
+                    except:  # We're Off the rails
                         error_rows.append(OBJECTID)
                         logger.logfile('[-] Error: [OID: {}][DOC: {}]\n{}'.format(OBJECTID, DOC_, traceback.format_exc()))                    
 
@@ -1165,7 +877,7 @@ class Crosswalk_NCRMS_Data(object):
 ##
 ###################################################################################################
 
-        except Exception as ex:
+        except Exception as e:
             try:
                 logger.logfile(arcpy.GetMessages(2))
             except:
