@@ -15,8 +15,8 @@
 Author:             
 Michael Troyer    ¯\_(ツ)_/¯
 
-Date:
-10/25/2018
+Updated:
+4/18/2019
 
 Purpose: Crosswalk state SHPO data to BLM NCRMS format.
 
@@ -43,7 +43,6 @@ import traceback
 import arcpy
 
 sys.path.append(r'T:\CO\GIS\gistools\tools\Cultural')
-
 from helpers.helper_functions import *
 from helpers.log_handler import pyt_log
 
