@@ -25,6 +25,7 @@ def deleteInMemory():
     arcpy.env.workspace = orig_workspace
 
 
+# Unused
 def compare_schema(src, dst):
     src_schema = set([(f.name.upper(), f.type, f.length) for f in arcpy.ListFields(src)])
     dst_schema = set([(f.name.upper(), f.type, f.length) for f in arcpy.ListFields(dst)])
@@ -96,7 +97,8 @@ def tryParseDate(date):
 
 def format_data(input_data, dest_params):
     '''accepts an input dictionary of field format parameters and matches input data to it
-       note: the state standard only includes text, double, and date formats'''
+       note: the state standard only includes text, double, and date formats
+       Will truncate text!'''
     # string, date, double
     if dest_params['TYPE'] == 'String':
         # make sure is not too long
@@ -121,6 +123,8 @@ def extract_parentheticals(string):
 
 
 def map_domain_values(raw_value, domain_mapping_dict):
+    """Translate raw_value against domain mapping.
+    Return None if not found"""
     return domain_mapping_dict.get(raw_value, None)
 
 

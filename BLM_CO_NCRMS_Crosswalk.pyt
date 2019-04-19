@@ -27,9 +27,9 @@ Purpose: Crosswalk state SHPO data to BLM NCRMS format.
 
 
 """
-# TODO: add BLM acres (tbd - clip, calc, join) to sites and surveys
-# TODO: fix variable overwrites in survey loop - don't recycle names
-
+# TODO: calculate BLM acres for sitesa and surveys
+# TODO: Custom exceptions
+# TODO: Test helper functions!
 # TODO: finish up the documen..
 
 
@@ -43,7 +43,6 @@ from __future__ import division
 from collections import Counter
 from collections import defaultdict
 from collections import OrderedDict
-import copy
 import csv
 import datetime
 import getpass
@@ -74,6 +73,7 @@ start_time = datetime.datetime.now()
 start_date = datetime.date(1900,1,1)  # SHPO dates are int days since 1/1/1900
 date_time_stamp = re.sub('[^0-9]', '', str(start_time)[2:16])
 
+# TODO: switch to relative paths
 gdb_template_xml = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\database_schema.xml'
 domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\domain_map.csv'
 
@@ -120,6 +120,8 @@ class Crosswalk_NCRMS_Data(object):
             parameterType="Required",
             direction="Input"
             )
+
+        ## May need a param path to land ownership to calculate BLM acres..
 
         return [src_gdb, out_gdb]
 
@@ -191,7 +193,7 @@ class Crosswalk_NCRMS_Data(object):
             organization_table = os.path.join(input_path, 'Organization')
             # Probably faster with SQL...
             # Get most recent value and date for each site in [Assessment, Condition, Organization]
-            # dict: {table: {site_id: {value: val, date: dt}}}
+            # {table: {site_id: {value: val, date: dt}}}
             tbl_updates = {
                 'Assessment'   : {},
                 'Condition'    : {},
@@ -230,7 +232,7 @@ class Crosswalk_NCRMS_Data(object):
             domain_mapping = defaultdict(dict)
 
             logger.console('Reading domain mapping table..')
-            with open(domain_map_csv, 'r') as f:  # rb p3 (pro)
+            with open(domain_map_csv, 'r') as f:  # rb py3 (once switched to pro)
                 csv_reader = csv.reader(f)
                 # Skip the header row
                 csv_reader.next()
@@ -247,7 +249,7 @@ class Crosswalk_NCRMS_Data(object):
 
             logger.log_all('\n'+ 'Processing Sites'.center(80, '-') + '\n')
 
-            # Remove the old [CRM_Resources] - replace with input data copy - mod in place
+            # Remove the blank [CRM_Resources] - replace with input data copy and mod in place
             arcpy.Delete_management(os.path.join(gdb_name, 'CRM_Resources'))
 
             # Get the paths to output success and failure FCs, duplicate table, and M-to-M table
@@ -257,7 +259,7 @@ class Crosswalk_NCRMS_Data(object):
             site_survey_map_table = os.path.join(gdb_name, 'CRM_RSRCE_INVSTGTN_TBL')
 
             # Copy input fc to database and get as a feature layer
-            # Will be success layer, failures will be copied to <faliure> and removed
+            # Will be success layer, failures will be copied to <failure> and removed
             input_fc = os.path.join(input_path, 'BLM_CO_Sites')
             arcpy.CopyFeatures_management(input_fc, success)
             working_lyr = arcpy.MakeFeatureLayer_management(success, r'in_memory\lyr')
@@ -332,6 +334,10 @@ class Crosswalk_NCRMS_Data(object):
             ##
             #######################################################################################
 
+            # Use and update cursor to transform the src data to the NCRMS fields
+            # There has to be a better way.. indexing rows like this sucks.
+            # Class based approach to processing rows - class SiteRecord() ?
+            # A Record base class would make this easier to generalize
             with arcpy.da.UpdateCursor(working_lyr, update_fields) as cur:
                 for row in cur:
                     if report_ix % 5000 == 0:
@@ -371,6 +377,7 @@ class Crosswalk_NCRMS_Data(object):
                         feature        = clean_string(feature)
                         artifact       = clean_string(artifact)                       
 
+                        # NCRMS field indexes
                         # 15 'RSRCE_AGCY_ID'             
                         # 16 'RSRCE_SHPO_ID'             
                         # 17 'RSRCE_NM'                  
@@ -440,7 +447,7 @@ class Crosswalk_NCRMS_Data(object):
                                        for v in rsrce_cats]
                             # Pick the most common
                             res_cnt = Counter(dom_cat)
-                            #TODO: what about ties?
+                            #TODO: what about ties?! Takes first alphabetically - aaaaaahahhaha
                             max_res_cat = res_cnt.most_common(1)[0][0]
                             row[20] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CAT_NM'])
                         else:
@@ -870,6 +877,10 @@ class Crosswalk_NCRMS_Data(object):
             logger.console('Updating GIS_ACRES..')
             arcpy.CalculateField_management(working_lyr, "GIS_ACRES", "!shape.area@ACRES!", "PYTHON_9.3")
 
+
+            #TODO: Update GIS acres for sites and surveys
+            #TODO: Isolate BLM lands, dissolve, Intersect site/survey, dissolve, join?
+            #TODO: Sites intersect will be super slow..
 
 ###################################################################################################
 ##
