@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-###################################################################################################
-##
-## FRONT MATTER
-##
-###################################################################################################
 """
   ____  _     __  __     ____ ___     _   _  ____ ____  __  __ ____  
  | __ )| |   |  \/  |   / ___/ _ \   | \ | |/ ___|  _ \|  \/  / ___| 
@@ -33,12 +28,6 @@ Purpose: Crosswalk state SHPO data to BLM NCRMS format.
 # TODO: finish up the documen..
 
 
-###################################################################################################
-##
-## IMPORTS
-##
-###################################################################################################
-
 from __future__ import division
 from collections import Counter
 from collections import defaultdict
@@ -58,12 +47,6 @@ sys.path.append(r'T:\CO\GIS\gistools\tools\Cultural')
 from helpers.helper_functions import *
 from helpers.log_handler import pyt_log
 
-
-###################################################################################################
-##
-## GLOBALS
-##
-###################################################################################################
 
 arcpy.env.addOutputsToMap = False
 arcpy.env.overwriteOutput = True
@@ -337,7 +320,7 @@ class Crosswalk_NCRMS_Data(object):
             # Use and update cursor to transform the src data to the NCRMS fields
             # There has to be a better way.. indexing rows like this sucks.
             # Class based approach to processing rows - class SiteRecord() ?
-            # A Record base class would make this easier to generalize
+            # A Record() abstract base class would make this easier to generalize
             with arcpy.da.UpdateCursor(working_lyr, update_fields) as cur:
                 for row in cur:
                     if report_ix % 5000 == 0:
@@ -717,6 +700,7 @@ class Crosswalk_NCRMS_Data(object):
                         completion = clean_string(completion)
                         activity   = clean_string(activity)
 
+                        # NCRMS field indexes
                         # 11 'INVSTGTN_AGCY_ID'
                         # 12 'INVSTGTN_SHPO_ID'
                         # 13 'INVSTGTN_CMPLT_MONTH_YR'
@@ -888,6 +872,7 @@ class Crosswalk_NCRMS_Data(object):
 ##
 ###################################################################################################
 
+        #TODO: Better exceptions!
         except Exception as e:
             try:
                 logger.logfile(arcpy.GetMessages(2))
@@ -905,7 +890,10 @@ class Crosswalk_NCRMS_Data(object):
         finally:
             # Clear memory JIC
             arcpy.AddMessage('\n'+ 'Complete'.center(80, '-') + '\n')
-            deleteInMemory()
+            try:
+                deleteInMemory()
+            except:
+                pass # Don't throw exceptions in clean up !!
 
 
 ###################################################################################################
