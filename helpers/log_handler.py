@@ -13,7 +13,6 @@ class pyt_log(object):
         self.log_path = log_path
     
     def _write_arg(self, arg, path, starting_level=0):
-        """Accepts a [path] txt from open(path) and unpacks the data [arg]"""
         level = starting_level
         txtfile = open(path, 'a')
         if type(arg) == dict:
@@ -35,7 +34,6 @@ class pyt_log(object):
                     self._write_arg(a, path, starting_level=level+1)
 
     def _writer(self, msg, path, *args):
-        """A writer to write the msg, and unpacked variable"""
         if os.path.exists(path):
             write_type = 'a'
         else:

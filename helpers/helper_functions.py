@@ -68,8 +68,7 @@ def get_acres(fc):
 
 
 def clean_string(string):
-    string = string.strip() if string else None
-    return string
+    return string.strip() if string else None
     
 
 def tryParseDate(date):

@@ -20,12 +20,26 @@ Updated:
 
 Purpose: Crosswalk state SHPO data to BLM NCRMS format.
 
+Usage:
+
+* Input FCs must be named: 'BLM_CO_Sites', 'BLM_CO_Surveys'
+
+* Related tables must be named: 'Assessment', 'Condition', 'Organization'
+
+* Input Sites FC must have fields named:
+* 'SITE_', 'site_doc_id', 'site_doc_name', 'name', 'resource_type', 'culture', 'archaeology',
+* 'site_type', 'NRC_A', 'NRC_B', 'NRC_C', 'NRC_D', 'feature', 'artifact',
+
+* Input Surveys FC must have fields named:
+* 'DOC_', 'LAST_AGENC', 'LAST_SOURC', 'LAST_DATE_', 'name', 'lead_agenc', 'institutio', 'method', 'completion', 'activity',
 
 """
-# TODO: calculate BLM acres for sitesa and surveys
+# TODO: calculate BLM acres for sites and surveys
+# TODO: Review Domain map CSV values
 # TODO: Custom exceptions
 # TODO: Test helper functions!
-# TODO: finish up the documen..
+# TODO: Test cases - verify accuracy
+# TODO: finish up the documen....
 
 
 from __future__ import division
@@ -42,7 +56,9 @@ import traceback
 
 import arcpy
 
+#This will need to be updated or dropped depending on final home
 sys.path.append(r'T:\CO\GIS\gistools\tools\Cultural')
+
 from helpers.helper_functions import *
 from helpers.log_handler import pyt_log
 
@@ -231,7 +247,7 @@ class Crosswalk_NCRMS_Data(object):
 
             logger.log_all('\n'+ 'Processing Sites'.center(80, '-') + '\n')
 
-            # Remove the blank [CRM_Resources] - replace with input data copy and mod in place
+            # Remove the blank [CRM_Resources] feature class - replace with input data and mod in place
             arcpy.Delete_management(os.path.join(gdb_name, 'CRM_Resources'))
 
             # Get the paths to output success and failure FCs, duplicate table, and M-to-M table
@@ -294,7 +310,6 @@ class Crosswalk_NCRMS_Data(object):
                     field_domain=field_params['DOMAIN'],
                     )
  
-            # NCRMS_fields = sorted(target_schema.keys())
             NCRMS_fields = target_schema.keys()
             SHPO_fields = [
                 'SITE_', 'site_doc_id', 'site_doc_name', 'name', 'resource_type', 'culture',  'archaeology', 'site_type',
@@ -304,7 +319,6 @@ class Crosswalk_NCRMS_Data(object):
             logger.logfile('NCRMS fields:\n{}'.format(NCRMS_fields))
 
             error_rows = []
-            logger.console('Iterating rows..')
             update_fields = ['OBJECTID'] + SHPO_fields + NCRMS_fields
             report_ix = 1
 
@@ -326,6 +340,7 @@ class Crosswalk_NCRMS_Data(object):
                         logger.console('Processed {} of {} rows..'.format(report_ix, n_rows))
 
                     try:
+                        # The source data
                         OBJECTID       = row[0]  # Used
                         SITE_          = row[1]  # Used              
                         site_doc_id    = row[2]  # Used
@@ -343,7 +358,6 @@ class Crosswalk_NCRMS_Data(object):
                         artifact       = row[14]  # Used
 
                         # Clean the strings - no weird surprises!
-                        #TODO: REORDER
                         SITE_          = clean_string(SITE_)              
                         site_doc_id    = clean_string(site_doc_id)
                         site_doc_name  = clean_string(site_doc_name)
@@ -385,18 +399,22 @@ class Crosswalk_NCRMS_Data(object):
                         comments = ''
 
                         # RSRCE_AGCY_ID = row[15]
+                        # RSRCE_AGCY_ID is site id
                         row[15] = SITE_
 
                         # RSRCE_SHPO_ID = row[16]
+                        # RSRCE_SHPO_ID is also site ID
                         row[16] = SITE_
 
                         # RSRCE_NM = row[17]
+                        # RSRCE_NM is name
                         if name:
                             row[17] = format_data(name, target_schema['RSRCE_NM'])
                         else:
                             row[17] = None
 
                         # RSRCE_TMPRL_CLTRL_ASGNMNT = row[18]
+                        # Domain translate resource type
                         if resource_type:
                             try:
                                 res_type = map_domain_values(resource_type, domain_mapping['CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT'])
@@ -412,7 +430,7 @@ class Crosswalk_NCRMS_Data(object):
                         # RSRCE_PRMRY_CAT_NM = row[20]
                         # RSRCE_CAT = row[21]
                         if archaeology:
-                            archaeology = archaeology.replace('HISTORIC>', '')
+                            archaeology = archaeology.replace('HISTORIC>', '')  #'HISTORIC is redundant
                             arch_items = [ai for ai in archaeology.split('>') if ai.strip()]
                         else: arch_items = []
 
@@ -422,14 +440,16 @@ class Crosswalk_NCRMS_Data(object):
 
                         rsrce_cats = arch_items + site_types
                         if rsrce_cats:
+                            # String together all the relevant categories
                             rsrce_cat = ', '.join(sorted(rsrce_cats))
                             row[21] = format_data(rsrce_cat, target_schema['RSRCE_CAT'])
                             # Remap each value to its corresponding domain value
                             dom_cat = [map_domain_values(v, domain_mapping['CRM_DOM_RSRCE_PRMRY_CAT'])
                                        for v in rsrce_cats]
-                            # Pick the most common
+                            # Pick the most common - this may be problematic
+                            # May need to flag these for manual inspection..
+                            # Ties are broken alphabetically
                             res_cnt = Counter(dom_cat)
-                            #TODO: what about ties?! Takes first alphabetically - aaaaaahahhaha
                             max_res_cat = res_cnt.most_common(1)[0][0]
                             row[20] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CAT_NM'])
                         else:
@@ -437,6 +457,7 @@ class Crosswalk_NCRMS_Data(object):
                             row[20] = None
 
                         # RSRCE_CNDTN_ASSMNT = row[25]
+                        # Pull from related table
                         cnd = tbl_updates['Condition'].get(SITE_)
                         if cnd:
                             cnd_val = cnd['Condition']
@@ -445,7 +466,7 @@ class Crosswalk_NCRMS_Data(object):
                                 dom_cnd = map_domain_values(cnd_val, domain_mapping['CRM_DOM_RSRCE_CNDTN_ASSMNT'])
                                 row[25] = format_data(dom_cnd, target_schema['RSRCE_CNDTN_ASSMNT'])
                             except Exception as e:
-                                raise ValueError('Condition Error', cnd, e)
+                                raise ValueError('Condition Error', cnd, e) 
                         else:
                             row[25] = 'Unknown'                    
 
@@ -463,7 +484,7 @@ class Crosswalk_NCRMS_Data(object):
                             try:
                                 row[22] = map_domain_values(assess_val, domain_mapping['DOM_YES_NO_UNDTRMND'])
                             except Exception as e:
-                                raise ValueError('Assessment Error', assess_val, e)
+                                raise ValueError('Assessment Error', assess_val, e) 
 
                             try:
                                 row[27] = assess_date
@@ -472,17 +493,17 @@ class Crosswalk_NCRMS_Data(object):
                                 except:
                                     row[26] = None
                             except Exception as e:
-                                raise ValueError('Assessment Date Error', assess_date, e)
+                                raise ValueError('Assessment Date Error', assess_date, e) 
 
                             try:
                                 row[24] = map_domain_values(assess_val, domain_mapping['CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM'])
                             except Exception as e:
-                                raise ValueError('Assessment Domain Error', assess_val, e)
+                                raise ValueError('Assessment Domain Error', assess_val, e) 
 
                             try:
                                 row[23] = parse_assessment_criteria((NRC_A, NRC_B, NRC_C, NRC_D))
                             except Exception as e:
-                                raise ValueError('Parse Assessment Error', (NRC_A, NRC_B, NRC_C, NRC_D), e)
+                                raise ValueError('Parse Assessment Error', (NRC_A, NRC_B, NRC_C, NRC_D), e) 
                         else:
                             row[27], row[26], row[24], row[23], row[22] = None, None, 'NA', None, 'Unknown'
 
@@ -497,11 +518,13 @@ class Crosswalk_NCRMS_Data(object):
                         row[30] = 'Unknown'
                         
                         # RSRCE_CMT = row[31]
+                        # Capture all the feature and artifact data as comments
                         comments += '[FEATURES: {}] '.format(feature.replace('>', ', ')) if feature else ''
                         comments += '[ARTIFACTS: {}] '.format(artifact.replace('>', ', ')) if artifact else ''
                         row[31] = format_data(comments, target_schema['RSRCE_CMT'])
 
                         # RSRCE_SITE_DOC_ID = row[32]
+                        # Get all the relevant surveys for each site to update many-to-many link table
                         if site_doc_id:
                             doc_ids = set([sid for sid in site_doc_id.split('>') if sid.strip()])
                             for doc_id in doc_ids:
@@ -512,6 +535,7 @@ class Crosswalk_NCRMS_Data(object):
                             row[32] = None
 
                         # RSRCE_SITE_DOC_NAME = row[33]
+                        # Get all the survey names! - These are a mess..
                         if site_doc_name:
                             site_doc_name = ', '.join(['[{}]'.format(s) for s in site_doc_name.split('>')])
                             row[33] = format_data(site_doc_name, target_schema['RSRCE_SITE_DOC_NAME'])
@@ -530,7 +554,7 @@ class Crosswalk_NCRMS_Data(object):
 
                     except:  # We're Off the rails
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc())) 
+                        logger.logfile('[-] Unhandled Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc())) 
 
                     finally:
                         report_ix += 1
@@ -583,7 +607,9 @@ class Crosswalk_NCRMS_Data(object):
                 for site_id, doc_id in site_survey_mapping:
                     cur.insertRow((site_id, doc_id))
             
-            
+            #TODO: Update BLM Acres
+
+
             #######################################################################################
             ##
             ## INVESTIGATIONS
@@ -599,7 +625,7 @@ class Crosswalk_NCRMS_Data(object):
             success = os.path.join(gdb_name, 'CRM_Investigations')
             failure = os.path.join(gdb_name, 'CRM_Investigations_fails')
             duplicates = os.path.join(gdb_name, 'CRM_Investigations_duplicates')
-            site_survey_map_table = os.path.join(gdb_name, 'CRM_RSRCE_INVSTGTN_TBL')
+            site_survey_map_table = os.path.join(gdb_name, 'CRM_RSRCE_INVSTGTN_TBL')  # Again?
 
             # Copy input fc to database and get as a feature layer
             # Will be success layer, failures will be copied to <faliure> and removed
@@ -719,7 +745,7 @@ class Crosswalk_NCRMS_Data(object):
                         # Track comments throughout and add to COMMENTS field
                         comments = ''
 
-                        # INVSTGTN_AGCY_ID = row[11] - Agency or mine from name
+                        # INVSTGTN_AGCY_ID = row[11] - Agency - can potentially mine from name with re
                         row[11] = format_data(LAST_AGENC, target_schema['INVSTGTN_AGCY_ID'])
 
                         # INVSTGTN_SHPO_ID = row[12] - DOC_
@@ -727,21 +753,22 @@ class Crosswalk_NCRMS_Data(object):
 
                         # INVSTGTN_DATE = row[14] - use LAST_DATE_ and fillna with completion date
                         # INVSTGTN_CMPLT_MONTH_YR = row[13] from INVSTGTN_DATE
-                        dates = 'last_date: [{}] - completion: [{}]'.format(LAST_DATE_, completion)
+                        dates = 'last_date: [{}] - completion: [{}]'.format(LAST_DATE_, completion)  #add to comments?
                         if LAST_DATE_ > 30000:  # int days since 1/1/1900
                             try:
+                                #TODO: Double check these!!
                                 row_date = start_date + datetime.timedelta(LAST_DATE_)  
                                 row[14] = row_date
                                 row[15] = '{}-{}'.format(row_date.year, row_date.month)
                             except Exception as e:
-                                raise ValueError('LAST_DATE_ Error', LAST_DATE_, e)
+                                raise ValueError('LAST_DATE_ Error', LAST_DATE_, e) 
                         elif completion:
                             try:
                                 row_date = tryParseDate(completion)
                                 row[14] = row_date
                                 row[15] = '{}-{}'.format(row_date.year, row_date.month)
                             except Exception as e:
-                                raise ValueError('Completion Date Error', completion, e)
+                                raise ValueError('Completion Date Error', completion, e) 
 
                         else:
                             row[14] = None
@@ -759,7 +786,7 @@ class Crosswalk_NCRMS_Data(object):
                                 activity = map_domain_values(activity, domain_mapping['CRM_DOM_INVSTGTN_AUTH'])
                                 row[17] = format_data(activity, target_schema['INVSTGTN_AUTH'])
                             except Exception as e:
-                                raise ValueError('Activity Error', activity, e)
+                                raise ValueError('Activity Error', activity, e) 
                         else:
                             row[17] = 'Unknown'
 
@@ -769,7 +796,7 @@ class Crosswalk_NCRMS_Data(object):
                                 method = map_domain_values(method, domain_mapping['CRM_DOM_INVSTGTN_CL'])
                                 row[18] = format_data(method, target_schema['INVSTGTN_CL'])
                             except Exception as e:
-                                raise ValueError('Method Error', method, e)
+                                raise ValueError('Method Error', method, e) 
                         else:
                             row[18] = 'Unknown'
 
@@ -799,6 +826,7 @@ class Crosswalk_NCRMS_Data(object):
                         row[21] = 'CO SHPO'
 
                         # INVSTGTN_CMT = row[22]
+                        # Did I add any comments??
                         row[22] = format_data(comments, target_schema['INVSTGTN_CMT'])
 
                         # ADMIN_ST = row[23] - default CO
@@ -813,7 +841,7 @@ class Crosswalk_NCRMS_Data(object):
 
                     except:  # We're Off the rails
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] Error: [OID: {}][DOC: {}]\n{}'.format(OBJECTID, DOC_, traceback.format_exc()))                    
+                        logger.logfile('[-] Unhandled Error: [OID: {}][DOC: {}]\n{}'.format(OBJECTID, DOC_, traceback.format_exc()))                    
 
                     finally:
                         report_ix += 1
@@ -872,6 +900,7 @@ class Crosswalk_NCRMS_Data(object):
 ###################################################################################################
 
         #TODO: Better exceptions!
+        # Top level exceptions
         except Exception as e:
             try:
                 logger.logfile(arcpy.GetMessages(2))
@@ -893,6 +922,5 @@ class Crosswalk_NCRMS_Data(object):
                 deleteInMemory()
             except:
                 pass # Don't throw exceptions in clean up !!
-
 
 ###################################################################################################
