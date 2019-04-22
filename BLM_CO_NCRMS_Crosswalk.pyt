@@ -37,8 +37,16 @@ Usage:
 # TODO: calculate BLM acres for sites and surveys
 # TODO: Review Domain map CSV values
 # TODO: Custom exceptions
+# TODO: Date parser is silencing errors
 # TODO: Test helper functions!
 # TODO: Test cases - verify accuracy
+# Potential issues:
+    # Investigations:
+    #   NEPA IDs
+    #   No Comments
+    # Resources:
+    #   Eligibilty field interplay - some seem weird.
+    #   Last recorded date - just year or year/month?
 # TODO: finish up the documen....
 
 
@@ -759,14 +767,14 @@ class Crosswalk_NCRMS_Data(object):
                                 #TODO: Double check these!!
                                 row_date = start_date + datetime.timedelta(LAST_DATE_)  
                                 row[14] = row_date
-                                row[15] = '{}-{}'.format(row_date.year, row_date.month)
+                                row[13] = '{}-{}'.format(row_date.year, row_date.month)
                             except Exception as e:
                                 raise ValueError('LAST_DATE_ Error', LAST_DATE_, e) 
                         elif completion:
                             try:
                                 row_date = tryParseDate(completion)
                                 row[14] = row_date
-                                row[15] = '{}-{}'.format(row_date.year, row_date.month)
+                                row[13] = '{}-{}'.format(row_date.year, row_date.month)
                             except Exception as e:
                                 raise ValueError('Completion Date Error', completion, e) 
 
