@@ -1,4 +1,0 @@
-NAME,ALIAS,TYPE,LENGTH,PRECISION,SCALE,DEFAULT,DOMAIN,EDITABLE,ISNULLABLE,REQUIRED,UNIQUE
-OBJECTID,OBJECTID,OID,4,0,0,,,False,False,True,0
-CRM_RSRCE_ID,CRM Resource Unique Identifier,String,50,0,0,,,True,False,False,0
-CRM_INVSTGTN_ID,CRM Investigation Unique Identifier,String,50,0,0,,,True,False,False,0

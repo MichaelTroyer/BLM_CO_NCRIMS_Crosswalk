@@ -287,7 +287,7 @@ class Crosswalk_NCRMS_Data(object):
                 ('RSRCE_NM', {'ALIAS': 'Resource Name','TYPE': 'String','LENGTH': 255,'DOMAIN': None,'DEFAULT': None,}),
                 ('RSRCE_TMPRL_CLTRL_ASGNMNT', {'ALIAS': 'Resource Temporal Cultural Assignment','TYPE': 'String','LENGTH': 50,'DOMAIN': 'CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT','DEFAULT': 'Unknown',}),
                 ('RSRCE_PRMRY_PRPRTY_CL', {'ALIAS': 'Resource Primary Property Class','TYPE': 'String','LENGTH': 30,'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_PRPRTY_CL','DEFAULT': 'Site',}),
-                ('RSRCE_PRMRY_CAT_NM', {'ALIAS': 'Resource Primary Category Name','TYPE': 'String','LENGTH': 30,'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_CAT','DEFAULT': 'Unknown',}),
+                ('RSRCE_PRMRY_CTGRY_NM', {'ALIAS': 'Resource Primary Category Name','TYPE': 'String','LENGTH': 30,'DOMAIN': 'CRM_DOM_RSRCE_PRMRY_CAT','DEFAULT': 'Unknown',}),
                 ('RSRCE_CAT', {'ALIAS': 'Resource Category','TYPE': 'String','LENGTH': 2000,'DOMAIN': None,'DEFAULT': None,}),
                 ('RSRCE_NRHP_ELGBLE_STTS', {'ALIAS': 'Resource NRHP Eligibility Status','TYPE': 'String','LENGTH': 12,'DOMAIN': 'DOM_YES_NO_UNDTRMND','DEFAULT': 'Undetermined',}),
                 ('RSRCE_NRHP_ELGBLE_CRTRA', {'ALIAS': 'NRHP Eligibility Criteria','TYPE': 'String','LENGTH': 35,'DOMAIN': 'CRM_DOM_RSRCE_NRHP_ELGBLE_CRTRA','DEFAULT': 'Not Specified',}),
@@ -387,7 +387,7 @@ class Crosswalk_NCRMS_Data(object):
                         # 17 'RSRCE_NM'                  
                         # 18 'RSRCE_TMPRL_CLTRL_ASGNMNT'
                         # 19 'RSRCE_PRMRY_PRPRTY_CL'    
-                        # 20 'RSRCE_PRMRY_CAT_NM'       
+                        # 20 'RSRCE_PRMRY_CTGRY_NM'       
                         # 21 'RSRCE_CAT'                
                         # 22 'RSRCE_NRHP_ELGBLE_STTS'   
                         # 23 'RSRCE_NRHP_ELGBLE_CRTRA'  
@@ -435,7 +435,7 @@ class Crosswalk_NCRMS_Data(object):
                         # RSRCE_PRMRY_PRPRTY_CL = row[19]
                         row[19] = 'Site'
 
-                        # RSRCE_PRMRY_CAT_NM = row[20]
+                        # RSRCE_PRMRY_CTGRY_NM = row[20]
                         # RSRCE_CAT = row[21]
                         if archaeology:
                             archaeology = archaeology.replace('HISTORIC>', '')  #'HISTORIC is redundant
@@ -459,7 +459,7 @@ class Crosswalk_NCRMS_Data(object):
                             # Ties are broken alphabetically
                             res_cnt = Counter(dom_cat)
                             max_res_cat = res_cnt.most_common(1)[0][0]
-                            row[20] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CAT_NM'])
+                            row[20] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CTGRY_NM'])
                         else:
                             row[21] = None
                             row[20] = None

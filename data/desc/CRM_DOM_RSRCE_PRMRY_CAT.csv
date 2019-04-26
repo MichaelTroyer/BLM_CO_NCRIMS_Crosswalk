@@ -16,6 +16,7 @@ OID,field,description
 -1,Prospecting,Prospecting
 -1,Ranching,Ranching
 -1,Settlement,Settlement
--1,Temporary Historic Site,Temporary Historic Site
 -1,Unknown,Unknown
 -1,Specialty  Site,Specialty Site
+-1,Government,Government
+-1,Recreation,Recreation

@@ -5,24 +5,24 @@ CRM_RSRCE_ID,CRM Resource Unique Identifier,String,50,0,0,,,True,False,False,0
 RSRCE_AGCY_ID,Agency Resource Identifier,String,50,0,0,,,True,True,False,0
 RSRCE_SHPO_ID,SHPO Database Resource Identifier,String,50,0,0,,,True,True,False,0
 RSRCE_NM,Resource Name,String,255,0,0,,,True,True,False,0
-RSRCE_TMPRL_CLTRL_ASGNMNT,Resource Temporal Cultural Assignment,String,50,0,0,Unknown,CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT,True,True,False,0
-RSRCE_PRMRY_PRPRTY_CL,Resource Primary Property Class,String,30,0,0,Site,CRM_DOM_RSRCE_PRMRY_PRPRTY_CL,True,True,False,0
-RSRCE_PRMRY_CAT_NM,Resource Primary Category Name,String,30,0,0,Unknown,CRM_DOM_RSRCE_PRMRY_CAT,True,True,False,0
+RSRCE_TMPRL_CLTRL_ASGNMNT,Resource Temporal Cultural Assignment,String,50,0,0,Unknown,CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT,True,False,False,0
+RSRCE_PRMRY_PRPRTY_CL,Resource Primary Property Class,String,30,0,0,Site,CRM_DOM_RSRCE_PRMRY_PRPRTY_CL,True,False,False,0
+RSRCE_PRMRY_CTGRY_NM,Resource Primary Category Name,String,30,0,0,Unknown,CRM_DOM_RSRCE_PRMRY_CAT,True,False,False,0
 RSRCE_CAT,Resource Category,String,2000,0,0,,,True,True,False,0
-RSRCE_NRHP_ELGBLE_STTS,Resource NRHP Eligibility Status,String,12,0,0,Undetermined,DOM_YES_NO_UNDTRMND,True,True,False,0
-RSRCE_NRHP_ELGBLE_CRTRA,NRHP Eligibility Criteria,String,35,0,0,Not Specified,CRM_DOM_RSRCE_NRHP_ELGBLE_CRTRA,True,True,False,0
-RSRCE_NRHP_ELGBLE_AUTH_NM,Resource NRHP Eligibility Authority Name,String,35,0,0,NA,CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM,True,True,False,0
+RSRCE_NRHP_ELGBLE_STTS,Resource NRHP Eligibility Status,String,12,0,0,Undetermined,DOM_YES_NO_UNDTRMND,True,False,False,0
+RSRCE_NRHP_ELGBLE_CRTRA,NRHP Eligibility Criteria,String,35,0,0,Not Specified,CRM_DOM_RSRCE_NRHP_ELGBLE_CRTRA,True,False,False,0
+RSRCE_NRHP_ELGBLE_AUTH_NM,Resource NRHP Eligibility Authority Name,String,35,0,0,NA,CRM_DOM_ RSRCE_NRHP_ELGBLE_AUTH_NM,True,True,False,0
 RSRCE_CNDTN_ASSMNT,Resource Condition Assessment,String,50,0,0,Unknown,CRM_DOM_RSRCE_CNDTN_ASSMNT,True,False,False,0
 RSRCE_LAST_RCRD_DT,Resource Last Recorded Date,String,20,0,0,,,True,True,False,0
 RSRCE_DATE,Resource Last Recorded Date in Date Format,Date,8,0,0,,,True,True,False,0
-RSRCE_CLCTN_PRFRM_STTS,Resource Collection Performed Status,String,20,0,0,Unknown,CRM_DOM_RSRCE_CLCTN_PRFRM_STTS,True,True,False,0
+RSRCE_CLCTN_PRFRM_STTS,Resource Collection Performed Status,String,20,0,0,Unknown,CRM_DOM_RSRCE_CLCTN_PRFRM_STTS,True,False,False,0
 RSRCE_DATA_SRCE,Resource Data Source,String,25,0,0,Unknown,CRM_DOM_DATA_SRCE,True,False,False,0
 RSRCE_SPTL_CLCTN_MTHD,Resource Spatial Collection Method,String,30,0,0,Unknown,CRM_DOM_SPTL_CLCTN_MTHD,True,False,False,0
 RSRCE_CMT,Resource Comments,String,2000,0,0,,,True,True,False,0
-ADMIN_ST,Administrative State Code,String,2,0,0,,DOM_ADMIN_ST,True,True,False,0
-GIS_ACRES,GIS Acres,Double,8,0,0,,,True,True,False,0
-BLM_ACRES,BLM Acres,Double,8,0,0,,,True,True,False,0
-CREATE_DATE,Created Date,Date,8,0,0,,,True,True,False,0
-CREATE_BY,Created By Name,String,30,0,0,,,True,True,False,0
+ADMIN_ST,Administrative State Code,String,2,0,0,,DOM_ADMIN_ST,True,False,False,0
+GIS_ACRES,GIS Acres,Double,8,0,0,0.0,,True,False,False,0
+BLM_ACRES,BLM Acres,Double,8,0,0,0.0,,True,False,False,0
+CREATE_DATE,Created Date,Date,8,0,0,,,True,False,False,0
+CREATE_BY,Created By Name,String,30,0,0,UNK,,True,False,False,0
 SHAPE_Length,SHAPE_Length,Double,8,0,0,,,False,True,True,0
 SHAPE_Area,SHAPE_Area,Double,8,0,0,,,False,True,True,0
