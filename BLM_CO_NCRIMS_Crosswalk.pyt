@@ -2,11 +2,11 @@
 
 
 """
-  ____  _     __  __     ____ ___     _   _  ____ ____  __  __ ____  
- | __ )| |   |  \/  |   / ___/ _ \   | \ | |/ ___|  _ \|  \/  / ___| 
- |  _ \| |   | |\/| |  | |  | | | |  |  \| | |   | |_) | |\/| \___ \ 
- | |_) | |___| |  | |  | |__| |_| |  | |\  | |___|  _ <| |  | |___) |
- |____/|_____|_|_ |_|__ \____\___/__ |_| \_|\____|_| \_\_|  |_|____/ 
+  ____  _     __  __     ____ ___     _   _  ____ ____  _  __  __ ____  
+ | __ )| |   |  \/  |   / ___/ _ \   | \ | |/ ___|  _ \| ||  \/  / ___| 
+ |  _ \| |   | |\/| |  | |  | | | |  |  \| | |   | |_) | || |\/| \___ \ 
+ | |_) | |___| |  | |  | |__| |_| |  | |\  | |___|  _ <| || |  | |___) |
+ |____/|_____|_|_ |_|__ \____\___/__ |_| \_|\____|_| \_|_|\_|  |_|____/ 
        / ___|  _ \ / _ \/ ___/ ___\ \      / / \  | |   | |/ /       
       | |   | |_) | | | \___ \___ \\ \ /\ / / _ \ | |   | ' /        
       | |___|  _ <| |_| |___) |__) |\ V  V / ___ \| |___| . \        
@@ -18,7 +18,7 @@ Michael Troyer    ¯\_(ツ)_/¯
 Updated:
 4/18/2019
 
-Purpose: Crosswalk state SHPO data to BLM NCRMS format.
+Purpose: Crosswalk state SHPO data to BLM NCRIMS format.
 
 Usage:
 
@@ -80,8 +80,8 @@ start_date = datetime.date(1900,1,1)  # SHPO dates are int days since 1/1/1900
 date_time_stamp = re.sub('[^0-9]', '', str(start_time)[2:16])
 
 # TODO: switch to relative paths
-gdb_template_xml = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\database_schema.xml'
-domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\domain_map.csv'
+gdb_template_xml = r'T:\CO\GIS\gistools\tools\Cultural\NCRIMS_Crosswalk\data\database_schema.xml'
+domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRIMS_Crosswalk\data\domain_map.csv'
 
 
 ###################################################################################################
@@ -92,16 +92,16 @@ domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRMS_Crosswalk\data\domain
 
 class Toolbox(object):
     def __init__(self):
-        self.label = "BLM_CO_NCRMS_Crosswalk_Toolbox"
-        self.alias = "BLM CO NCRMS Crosswalk Toolbox"
+        self.label = "BLM_CO_NCRIMS_Crosswalk_Toolbox"
+        self.alias = "BLM CO NCRIMS Crosswalk Toolbox"
 
         # List of tool classes associated with this toolbox
-        self.tools = [Crosswalk_NCRMS_Data]
+        self.tools = [Crosswalk_NCRIMS_Data]
 
 
-class Crosswalk_NCRMS_Data(object):
+class Crosswalk_NCRIMS_Data(object):
     def __init__(self):
-        self.label = "Crosswalk_NCRMS_Data"
+        self.label = "Crosswalk_NCRIMS_Data"
         self.description = ""
         self.canRunInBackground = True 
 
@@ -143,8 +143,8 @@ class Crosswalk_NCRMS_Data(object):
         has been changed."""
         # Defaults for easier testing - drop for prduction
         if not parameters[0].altered:
-            parameters[0].value = r'T:\CO\GIS\gisuser\rgfo\mtroyer\z-Tests\NCRMS_Testing\blm_full_format_181019.gdb'
-            parameters[1].value = r'T:\CO\GIS\gisuser\rgfo\mtroyer\z-Tests\NCRMS_Testing\test_output'
+            parameters[0].value = r'T:\CO\GIS\gisuser\rgfo\mtroyer\z-Tests\NCRIMS_Testing\blm_full_format_181019.gdb'
+            parameters[1].value = r'T:\CO\GIS\gisuser\rgfo\mtroyer\z-Tests\NCRIMS_Testing\test_output'
         return
 
 
@@ -172,11 +172,11 @@ class Crosswalk_NCRMS_Data(object):
             output_path = parameters[1].valueAsText
 
             # Create the logger
-            log_path = os.path.join(output_path, "BLM_CO_NCRMS_Crosswalk_{}.log".format(date_time_stamp))
+            log_path = os.path.join(output_path, "BLM_CO_NCRIMS_Crosswalk_{}.log".format(date_time_stamp))
             logger = pyt_log(log_path)
             
             # Start logging
-            logger.log_all("BLM CO NCRMS Data Crosswalk {}".format(datetime.datetime.now()))
+            logger.log_all("BLM CO NCRIMS Data Crosswalk {}".format(datetime.datetime.now()))
             logger.logfile("{}\n".format('-'*120))
             logger.log_all("Running environment: Python - {}\n".format(sys.version))
             logger.log_all("User: {}\n".format(user))
@@ -184,7 +184,7 @@ class Crosswalk_NCRMS_Data(object):
             logger.log_all("Output dir:\n\t{}\n".format(output_path))
 
             # Create goedatabase
-            gdb_name = 'BLM_CO_NCRMS_Crosswalk_{}'.format(date_time_stamp)
+            gdb_name = 'BLM_CO_NCRIMS_Crosswalk_{}'.format(date_time_stamp)
             arcpy.CreateFileGDB_management(output_path, gdb_name, "10.0")
             gdb_name = os.path.join(output_path, gdb_name) + '.gdb'
             # Schema from XML
@@ -307,7 +307,7 @@ class Crosswalk_NCRMS_Data(object):
                 ]: 
                 target_schema[key] = val
 
-            logger.console('Adding NCRMS Resources fields..')
+            logger.console('Adding NCRIMS Resources fields..')
             for field_name, field_params in target_schema.items():
                 arcpy.AddField_management(
                     in_table=working_lyr,
@@ -318,16 +318,16 @@ class Crosswalk_NCRMS_Data(object):
                     field_domain=field_params['DOMAIN'],
                     )
  
-            NCRMS_fields = target_schema.keys()
+            NCRIMS_fields = target_schema.keys()
             SHPO_fields = [
                 'SITE_', 'site_doc_id', 'site_doc_name', 'name', 'resource_type', 'culture',  'archaeology', 'site_type',
                 'NRC_A', 'NRC_B', 'NRC_C', 'NRC_D', 'feature', 'artifact',
                 ]
             logger.logfile('SHPO fields:\n{}'.format(SHPO_fields))
-            logger.logfile('NCRMS fields:\n{}'.format(NCRMS_fields))
+            logger.logfile('NCRIMS fields:\n{}'.format(NCRIMS_fields))
 
             error_rows = []
-            update_fields = ['OBJECTID'] + SHPO_fields + NCRMS_fields
+            update_fields = ['OBJECTID'] + SHPO_fields + NCRIMS_fields
             report_ix = 1
 
             site_survey_mapping = []
@@ -338,7 +338,7 @@ class Crosswalk_NCRMS_Data(object):
             ##
             #######################################################################################
 
-            # Use and update cursor to transform the src data to the NCRMS fields
+            # Use and update cursor to transform the src data to the NCRIMS fields
             # There has to be a better way.. indexing rows like this sucks.
             # Class based approach to processing rows - class SiteRecord() ?
             # A Record() abstract base class would make this easier to generalize
@@ -381,7 +381,7 @@ class Crosswalk_NCRMS_Data(object):
                         feature        = clean_string(feature)
                         artifact       = clean_string(artifact)                       
 
-                        # NCRMS field indexes
+                        # NCRIMS field indexes
                         # 15 'RSRCE_AGCY_ID'             
                         # 16 'RSRCE_SHPO_ID'             
                         # 17 'RSRCE_NM'                  
@@ -584,7 +584,7 @@ class Crosswalk_NCRMS_Data(object):
                 # Delete the derived fields from failure (so can be input again)
                 # Delete unnecesarry fields
                 for field in arcpy.ListFields(failure):
-                    if field.name in NCRMS_fields:
+                    if field.name in NCRIMS_fields:
                         try:
                             arcpy.DeleteField_management(failure, field.name)
                         except:
@@ -594,7 +594,7 @@ class Crosswalk_NCRMS_Data(object):
             # Delete unnecesarry fields from final output
             logger.console('Cleaning up fields..')
             for field in arcpy.ListFields(working_lyr):
-                if field.name not in NCRMS_fields:
+                if field.name not in NCRIMS_fields:
                     try:
                         arcpy.DeleteField_management(working_lyr, field.name)
                     except:
@@ -671,7 +671,7 @@ class Crosswalk_NCRMS_Data(object):
                 ]: 
                 target_schema[key] = val
 
-            logger.console('Adding NCRMS Investigation fields..')
+            logger.console('Adding NCRIMS Investigation fields..')
             for field_name, field_params in target_schema.items():
                 arcpy.AddField_management(
                     in_table=working_lyr,
@@ -682,17 +682,17 @@ class Crosswalk_NCRMS_Data(object):
                     field_domain=field_params['DOMAIN'],
                     )
 
-            NCRMS_fields = target_schema.keys()
+            NCRIMS_fields = target_schema.keys()
             SHPO_fields = [
                 'DOC_', 'LAST_AGENC', 'LAST_SOURC', 'LAST_DATE_', 'name', 'lead_agenc', 'institutio', 'method', 'completion', 'activity',
                 ]
 
             logger.logfile('SHPO investigation fields:\n{}'.format(SHPO_fields))
-            logger.logfile('NCRMS investigation fields:\n{}'.format(NCRMS_fields))
+            logger.logfile('NCRIMS investigation fields:\n{}'.format(NCRIMS_fields))
 
             error_rows = []
             logger.console('Iterating rows..')
-            update_fields = ['OBJECTID'] + SHPO_fields + NCRMS_fields
+            update_fields = ['OBJECTID'] + SHPO_fields + NCRIMS_fields
             report_ix = 1
 
             site_survey_mapping = []
@@ -733,7 +733,7 @@ class Crosswalk_NCRMS_Data(object):
                         completion = clean_string(completion)
                         activity   = clean_string(activity)
 
-                        # NCRMS field indexes
+                        # NCRIMS field indexes
                         # 11 'INVSTGTN_AGCY_ID'
                         # 12 'INVSTGTN_SHPO_ID'
                         # 13 'INVSTGTN_CMPLT_MONTH_YR'
@@ -871,7 +871,7 @@ class Crosswalk_NCRMS_Data(object):
                 # Delete the derived fields from failure (so can be input again)
                 # Delete unnecesarry fields
                 for field in arcpy.ListFields(failure):
-                    if field.name in NCRMS_fields:
+                    if field.name in NCRIMS_fields:
                         try:
                             arcpy.DeleteField_management(failure, field.name)
                         except:
@@ -881,7 +881,7 @@ class Crosswalk_NCRMS_Data(object):
             # Delete unnecesarry fields from final output
             logger.console('Cleaning up fields..')
             for field in arcpy.ListFields(working_lyr):
-                if field.name not in NCRMS_fields:
+                if field.name not in NCRIMS_fields:
                     try:
                         arcpy.DeleteField_management(working_lyr, field.name)
                     except:
