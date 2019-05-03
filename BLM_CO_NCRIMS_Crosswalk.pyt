@@ -247,7 +247,7 @@ class Crosswalk_NCRIMS_Data(object):
             # Read in the domain mapping from CSV - necessary to keep up with source SHPO 'domain' changes
             domain_mapping = defaultdict(dict)
 
-            logger.console('Reading domain mapping table..')
+            logger.console('\n' + 'Reading domain mapping table..')
             with open(domain_map_csv, 'r') as f:  # rb py3 (once switched to pro)
                 csv_reader = csv.reader(f)
                 # Skip the header row
@@ -449,31 +449,29 @@ class Crosswalk_NCRIMS_Data(object):
                         # RSRCE_CAT = row[21]
                         if archaeology:
                             archaeology = archaeology.replace('HISTORIC>', '')  #'HISTORIC is redundant
-                            arch_items = [ai for ai in archaeology.split('>') if ai.strip()]
+                            arch_items = [ai for ai in archaeology.split('>')]
                         else: arch_items = []
 
                         if site_type:
-                            site_types = [st for st in site_type.split('>') if st.strip()]
+                            site_types = [st for st in site_type.split('>')]
                         else: site_types = []
 
                         rsrce_cats = list(set(arch_items + site_types))
 
                         if rsrce_cats:
-                            # If there are multple resource categories and one is UNKNOWN, drop the UNKNOWN
-                            if len(rsrce_cats) > 1 and 'UNKNOWN' in rsrce_cats:
-                                rsrce_cats = [rc for rc in rsrce_cats if rc != 'UNKNOWN']
                             # String together all the relevant categories
                             rsrce_cat = ', '.join(sorted(rsrce_cats))
                             row[21] = format_data(rsrce_cat, target_schema['RSRCE_CAT'])
                             # Remap each value to its corresponding domain value
                             dom_cat = [map_domain_values(v, domain_mapping['CRM_DOM_RSRCE_PRMRY_CAT']) for v in rsrce_cats]
-                            # Pick the most common resource category
+                            # If there are multple remapped domain values and one is Unknown, drop the Unknown
+                            if len(dom_cat) > 1 and 'Unknown' in dom_cat:
+                                dom_cat = [dc for dc in dom_cat if dc != 'Unknown']
+                            # Pick the most common category
                             # Flag ties for manual inspection.
                             tie, most_common_res_cat = get_most_common_with_ties(dom_cat)
                             if tie:
-                                tie_comment = '[RESOURCE CATEGORY CONFLICT: {}] '.format(', '.join([val for val, _ in most_common_res_cat]))
-                                logger.logfile('[{}]: {}'.format(SITE_, tie_comment))
-                                comments += tie_comment
+                                comments += '[RESOURCE CATEGORY UNRESOLVED: {}] '.format(', '.join([val for val, _ in most_common_res_cat]))
                             # Break ties alphabetically
                             max_res_cat = most_common_res_cat[0][0]
                             row[20] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CTGRY_NM'])
@@ -683,7 +681,7 @@ class Crosswalk_NCRIMS_Data(object):
                 ('INVSTGTN_NEPA_ID', {'ALIAS': 'Investigation NEPA Identifier','TYPE': 'String','LENGTH': 50,'DOMAIN': None, 'DEFAULT': None,}),
                 ('INVSTGTN_DATA_SRCE', {'ALIAS': 'Investigation Data Source','TYPE': 'String','LENGTH': 25,'DOMAIN': 'CRM_DOM_DATA_SRCE', 'DEFAULT': 'Unknown',}),
                 ('INVSTGTN_CMT', {'ALIAS': 'Investigation Comments','TYPE': 'String','LENGTH': 2000, 'DOMAIN': None,'DEFAULT': None, }),
-                ('ADMIN_ST', {'ALIAS': 'Administartive State Code','TYPE': 'String','LENGTH': 2, 'DOMAIN': 'DOM_ADMIN_ST','DEFAULT': None,}),
+                ('ADMIN_ST', {'ALIAS': 'Administrative State Code','TYPE': 'String','LENGTH': 2, 'DOMAIN': 'DOM_ADMIN_ST','DEFAULT': None,}),
                 ('GIS_ACRES', {'ALIAS': 'GIS Acres','TYPE': 'Double','LENGTH': 20, 'DOMAIN': None,'DEFAULT': None,}),
                 ('BLM_ACRES', {'ALIAS': 'BLM Acres','TYPE': 'Double','LENGTH': 20, 'DOMAIN': None,'DEFAULT': None,}),
                 ]: 
@@ -784,14 +782,14 @@ class Crosswalk_NCRIMS_Data(object):
                             try:
                                 row_date = start_date + datetime.timedelta(LAST_DATE_)  
                                 row[14] = row_date
-                                row[13] = '{}-{}'.format(row_date.year, row_date.month)
+                                row[13] = '{}-{}'.format(row_date.month, row_date.year)
                             except Exception as e:
                                 raise ValueError('LAST_DATE_ Error', LAST_DATE_, e) 
                         elif completion:
                             try:
                                 row_date = tryParseDate(completion)
                                 row[14] = row_date
-                                row[13] = '{}-{}'.format(row_date.year, row_date.month)
+                                row[13] = '{}-{}'.format(row_date.month, row_date.year)
                             except Exception as e:
                                 raise ValueError('Completion Date Error', completion, e) 
 
