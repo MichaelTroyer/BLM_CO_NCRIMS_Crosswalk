@@ -1,3 +1,5 @@
+
+from collections import Counter
 import dateutil
 import re
 
@@ -113,19 +115,45 @@ def format_data(input_data, dest_params):
         clean_data = tryParseDate(input_data)
     return clean_data
 
+def get_most_common_with_ties(values):
+    '''
+    Find the most common values in a list of values. Will also check for ties.
+    Returns a tuple (boolean flag - was there a tie?, most common value(s)).
+    '''
+    # Value frequenct
+    value_counts = Counter(values)
+    # Get the frequency of counts
+    frequency_counts = value_counts.values()
+    # If the most common frequencty is greater than 1, there is a tie for most common value
+    most_frequent_count = Counter(frequency_counts).most_common(1)[0][1]
+    if most_frequent_count > 1:
+        # Tie?, values
+        # return the most common values
+        return (True, value_counts.most_common(most_frequent_count))
+    else:
+        # Return the most common value
+        return (False, value_counts.most_common(1))
 
-def extract_parentheticals(string):
-    parentheticals = re.findall(r'\(\w*\)', string)
-    if parentheticals:
-        string = re.sub(r'\(\w*\)', '', string)
-    return string, parentheticals
+def replace_all(text, replace_dict):
+    for src, tgt in replace_dict.iteritems():
+        text = text.replace(src, tgt)
+    return text
 
+def extract_parentheticals(text):
+    # Exract and clean all parenthetical groups > 1 char in length
+    # Get the outermost parentheticals
+    parens = text[text.find("(")+1:text.rfind(")")]
+    # Split on space and remove all the weird stuff - drop any single characters
+    clean_parens = [
+        p for p
+        in replace_all(parens, {'(': ' ', ')': ' '}).split()
+        if len(p) > 1]
+    return text, clean_parens
 
 def map_domain_values(raw_value, domain_mapping_dict):
     """Translate raw_value against domain mapping.
     Return None if not found"""
     return domain_mapping_dict.get(raw_value, None)
-
 
 def split_and_map_domain_values(raw_value, domain_mapping_dict, delimiter='>'):
     vals = raw_value.split(delimiter)
@@ -133,7 +161,6 @@ def split_and_map_domain_values(raw_value, domain_mapping_dict, delimiter='>'):
     vals = [domain_mapping_dict.get(v, None) for v in vals]
     # Can implment polling here..
     return vals
-
 
 def parse_assessment_criteria(four_tuple):  # (A, B, C, D) - Yes/No
     criteria = [True if c=='Yes' else False for c in four_tuple]
@@ -153,8 +180,6 @@ def parse_assessment_criteria(four_tuple):  # (A, B, C, D) - Yes/No
     else:
         return 'Not Specified'
 
-
-#TODO: Please god test this!
 def extract_nepa_ids(string):
     regex = r'DOI-BLM-CO-F[0-9oO]{1,5}-\d{2,4}-\d{1,4}[- ]\w+'  # Matching DOI-BLM-CO-F(digits, maybe oO)-date-seq type
     return re.findall(regex, string)

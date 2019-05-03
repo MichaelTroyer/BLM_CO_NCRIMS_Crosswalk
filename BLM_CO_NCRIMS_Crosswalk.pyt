@@ -38,15 +38,10 @@ Usage:
 # TODO: Review Domain map CSV values
 # TODO: Custom exceptions
 # TODO: Date parser is silencing errors
-# TODO: Test helper functions!
 # TODO: Test cases - verify accuracy
 # Potential issues:
-    # Investigations:
-    #   NEPA IDs
-    #   No Comments
     # Resources:
     #   Eligibilty field interplay - some seem weird.
-    #   Last recorded date - just year or year/month?
 # TODO: finish up the documen....
 
 
@@ -64,11 +59,8 @@ import traceback
 
 import arcpy
 
-#This will need to be updated or dropped depending on final home
-sys.path.append(r'T:\CO\GIS\gistools\tools\Cultural')
-
-from helpers.helper_functions import *
-from helpers.log_handler import pyt_log
+from helper_functions import *
+from log_handler import pyt_log
 
 
 arcpy.env.addOutputsToMap = False
@@ -79,10 +71,8 @@ start_time = datetime.datetime.now()
 start_date = datetime.date(1900,1,1)  # SHPO dates are int days since 1/1/1900
 date_time_stamp = re.sub('[^0-9]', '', str(start_time)[2:16])
 
-# TODO: switch to relative paths
-gdb_template_xml = r'T:\CO\GIS\gistools\tools\Cultural\NCRIMS_Crosswalk\data\database_schema.xml'
-domain_map_csv = r'T:\CO\GIS\gistools\tools\Cultural\NCRIMS_Crosswalk\data\domain_map.csv'
-
+gdb_template_xml = os.path.join(os.path.dirname(__file__), 'data', 'database_schema.xml')
+domain_map_csv = os.path.join(os.path.dirname(__file__), 'data', 'domain_map.csv')
 
 ###################################################################################################
 ##
@@ -127,9 +117,24 @@ class Crosswalk_NCRIMS_Data(object):
             direction="Input"
             )
 
-        ## May need a param path to land ownership to calculate BLM acres..
-
-        return [src_gdb, out_gdb]
+        #Input Target Shapefile
+        land_own=arcpy.Parameter(
+            displayName="Land Onwership Feature Layer",
+            name="Input_LO",
+            datatype="GPFeatureLayer",
+            parameterType="Required",
+            direction="Input"
+            )
+        
+        keep_shpo_fields=arcpy.Parameter(
+            displayName="Keep SHPO Source Fields",
+            name="Keep_SHPO_Fields",
+            datatype="Boolean",
+            parameterType="Optional",
+            direction="Input"
+            )
+        
+        return [src_gdb, out_gdb, land_own, keep_shpo_fields]
 
 
     def isLicensed(self):
@@ -145,6 +150,8 @@ class Crosswalk_NCRIMS_Data(object):
         if not parameters[0].altered:
             parameters[0].value = r'T:\CO\GIS\gisuser\rgfo\mtroyer\z-Tests\NCRIMS_Testing\blm_full_format_181019.gdb'
             parameters[1].value = r'T:\CO\GIS\gisuser\rgfo\mtroyer\z-Tests\NCRIMS_Testing\test_output'
+            parameters[2].value = r'T:\ReferenceState\CO\CorporateData\lands\Surface Management Agency (CO) Transparent - No Private.lyr'
+            parameters[3].value = False
         return
 
 
@@ -170,6 +177,8 @@ class Crosswalk_NCRIMS_Data(object):
             # get the input gdb and output file paths
             input_path = parameters[0].valueAsText
             output_path = parameters[1].valueAsText
+            land_own_lyr = parameters[2].valueAsText
+            keep_shpo_fields = parameters[3].value
 
             # Create the logger
             log_path = os.path.join(output_path, "BLM_CO_NCRIMS_Crosswalk_{}.log".format(date_time_stamp))
@@ -182,6 +191,8 @@ class Crosswalk_NCRIMS_Data(object):
             logger.log_all("User: {}\n".format(user))
             logger.log_all("Input gdb:\n\t{}\n".format(input_path))
             logger.log_all("Output dir:\n\t{}\n".format(output_path))
+            logger.log_all("Land Ownership Layer:\n\t{}\n".format(land_own_lyr))
+            logger.log_all("Keeping SHPO Source Fields: {}\n".format(keep_shpo_fields))
 
             # Create goedatabase
             gdb_name = 'BLM_CO_NCRIMS_Crosswalk_{}'.format(date_time_stamp)
@@ -197,7 +208,6 @@ class Crosswalk_NCRIMS_Data(object):
             assessment_table = os.path.join(input_path, 'Assessment')
             condition_table = os.path.join(input_path, 'Condition')
             organization_table = os.path.join(input_path, 'Organization')
-            # Probably faster with SQL...
             # Get most recent value and date for each site in [Assessment, Condition, Organization]
             # {table: {site_id: {value: val, date: dt}}}
             tbl_updates = {
@@ -446,19 +456,26 @@ class Crosswalk_NCRIMS_Data(object):
                             site_types = [st for st in site_type.split('>') if st.strip()]
                         else: site_types = []
 
-                        rsrce_cats = arch_items + site_types
+                        rsrce_cats = list(set(arch_items + site_types))
+
                         if rsrce_cats:
+                            # If there are multple resource categories and one is UNKNOWN, drop the UNKNOWN
+                            if len(rsrce_cats) > 1 and 'UNKNOWN' in rsrce_cats:
+                                rsrce_cats = [rc for rc in rsrce_cats if rc != 'UNKNOWN']
                             # String together all the relevant categories
                             rsrce_cat = ', '.join(sorted(rsrce_cats))
                             row[21] = format_data(rsrce_cat, target_schema['RSRCE_CAT'])
                             # Remap each value to its corresponding domain value
-                            dom_cat = [map_domain_values(v, domain_mapping['CRM_DOM_RSRCE_PRMRY_CAT'])
-                                       for v in rsrce_cats]
-                            # Pick the most common - this may be problematic
-                            # May need to flag these for manual inspection..
-                            # Ties are broken alphabetically
-                            res_cnt = Counter(dom_cat)
-                            max_res_cat = res_cnt.most_common(1)[0][0]
+                            dom_cat = [map_domain_values(v, domain_mapping['CRM_DOM_RSRCE_PRMRY_CAT']) for v in rsrce_cats]
+                            # Pick the most common resource category
+                            # Flag ties for manual inspection.
+                            tie, most_common_res_cat = get_most_common_with_ties(dom_cat)
+                            if tie:
+                                tie_comment = '[RESOURCE CATEGORY CONFLICT: {}] '.format(', '.join([val for val, _ in most_common_res_cat]))
+                                logger.logfile('[{}]: {}'.format(SITE_, tie_comment))
+                                comments += tie_comment
+                            # Break ties alphabetically
+                            max_res_cat = most_common_res_cat[0][0]
                             row[20] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CTGRY_NM'])
                         else:
                             row[21] = None
@@ -582,7 +599,7 @@ class Crosswalk_NCRIMS_Data(object):
                 arcpy.DeleteRows_management(working_lyr)
 
                 # Delete the derived fields from failure (so can be input again)
-                # Delete unnecesarry fields
+                # Delete unnecessary fields
                 for field in arcpy.ListFields(failure):
                     if field.name in NCRIMS_fields:
                         try:
@@ -592,18 +609,19 @@ class Crosswalk_NCRIMS_Data(object):
                             logger.logfile("Delete field from [Failure FC] failed: {}".format(field.name)) 
 
             # Delete unnecesarry fields from final output
-            logger.console('Cleaning up fields..')
-            for field in arcpy.ListFields(working_lyr):
-                if field.name not in NCRIMS_fields:
-                    try:
-                        arcpy.DeleteField_management(working_lyr, field.name)
-                    except:
+            if not keep_shpo_fields:
+                logger.console('Cleaning up fields..')
+                for field in arcpy.ListFields(working_lyr):
+                    if field.name not in NCRIMS_fields:
                         try:
-                            # try again damn it.. sometimes this sucks
                             arcpy.DeleteField_management(working_lyr, field.name)
                         except:
-                            # Should minimally fail on required fields
-                            logger.logfile("Delete field from [Success FC] failed: {}".format(field.name)) 
+                            try:
+                                # try again damn it.. sometimes this sucks
+                                arcpy.DeleteField_management(working_lyr, field.name)
+                            except:
+                                # Should minimally fail on required fields
+                                logger.logfile("Delete field from [Success FC] failed: {}".format(field.name)) 
 
             # Update acres
             logger.console('Updating GIS_ACRES..')
@@ -764,7 +782,6 @@ class Crosswalk_NCRIMS_Data(object):
                         dates = 'last_date: [{}] - completion: [{}]'.format(LAST_DATE_, completion)  #add to comments?
                         if LAST_DATE_ > 30000:  # int days since 1/1/1900
                             try:
-                                #TODO: Double check these!!
                                 row_date = start_date + datetime.timedelta(LAST_DATE_)  
                                 row[14] = row_date
                                 row[13] = '{}-{}'.format(row_date.year, row_date.month)
@@ -786,7 +803,11 @@ class Crosswalk_NCRIMS_Data(object):
                         row[15] = 'CO'
 
                         # INVSTGTN_TITLE = row[16] - name
+                        # Invenstigation Titles contain additional non-standard NEPA IDs and other info - move to comments
+                        name, parentheticals = extract_parentheticals(name)
                         row[16] = format_data(name, target_schema['INVSTGTN_TITLE'])
+                        if parentheticals:
+                            comments += ', '.join(parentheticals)
 
                         # INVSTGTN_AUTH = row[17] - activity
                         if activity:
@@ -879,27 +900,25 @@ class Crosswalk_NCRIMS_Data(object):
                             logger.logfile("Delete field from [Failure FC] failed: {}".format(field.name)) 
 
             # Delete unnecesarry fields from final output
-            logger.console('Cleaning up fields..')
-            for field in arcpy.ListFields(working_lyr):
-                if field.name not in NCRIMS_fields:
-                    try:
-                        arcpy.DeleteField_management(working_lyr, field.name)
-                    except:
+            if not keep_shpo_fields:
+                logger.console('Cleaning up fields..')
+                for field in arcpy.ListFields(working_lyr):
+                    if field.name not in NCRIMS_fields:
                         try:
-                            # try again..
                             arcpy.DeleteField_management(working_lyr, field.name)
                         except:
-                            # Should minimally fail on required fields
-                            logger.logfile("Delete field from [Success FC] failed: {}".format(field.name))
+                            try:
+                                # try again..
+                                arcpy.DeleteField_management(working_lyr, field.name)
+                            except:
+                                # Should minimally fail on required fields
+                                logger.logfile("Delete field from [Success FC] failed: {}".format(field.name))
 
             # Update acres
             logger.console('Updating GIS_ACRES..')
             arcpy.CalculateField_management(working_lyr, "GIS_ACRES", "!shape.area@ACRES!", "PYTHON_9.3")
 
-
-            #TODO: Update GIS acres for sites and surveys
-            #TODO: Isolate BLM lands, dissolve, Intersect site/survey, dissolve, join?
-            #TODO: Sites intersect will be super slow..
+            #TODO: Update BLM Acres
 
 ###################################################################################################
 ##
@@ -907,14 +926,16 @@ class Crosswalk_NCRIMS_Data(object):
 ##
 ###################################################################################################
 
-        #TODO: Better exceptions!
         # Top level exceptions
         except Exception as e:
             try:
-                logger.logfile(arcpy.GetMessages(2))
+                logger.logfile(e)
+                # logger.logfile(arcpy.GetMessages(2))
             except:
-                arcpy.AddMessage(arcpy.GetMessages(2))
-            arcpy.AddError(traceback.format_exc())
+                # arcpy.AddMessage(arcpy.GetMessages(2))
+                arcpy.AddMessage(e)
+            # arcpy.AddError(traceback.format_exc())
+            arcpy.AddError(e)
             
 
 ###################################################################################################
