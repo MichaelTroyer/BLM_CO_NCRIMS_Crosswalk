@@ -23,8 +23,10 @@ Michael Troyer
 Updated:
 4/18/2019
 
-Purpose: Crosswalk state SHPO data to BLM NCRIMS format.
+BLM Colorado National Cultural Resourse Information Mangement System Crosswalk
+"""
 
+"""
 Usage:
 
 * Input FCs must be named: 'BLM_CO_Sites', 'BLM_CO_Surveys'
@@ -41,6 +43,7 @@ Usage:
 
 # TODO: calculate BLM acres for sites and surveys
 # TODO: Spot check records
+# TODO: Review domain map
 # TODO: finish up the documen....
 
 
