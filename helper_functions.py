@@ -104,9 +104,7 @@ def format_data(input_data, dest_params):
     if dest_params['TYPE'] == 'String':
         # make sure is not too long
         max_length = dest_params['LENGTH']
-        if len(input_data) > max_length:
-            clean_data = input_data[:max_length]
-        else: clean_data = input_data
+        clean_data = input_data[:max_length]
     if dest_params['TYPE'] == 'Double':
         # make sure is type 'float'
         clean_data = float(input_data)
@@ -120,18 +118,17 @@ def get_most_common_with_ties(values):
     Find the most common values in a list of values. Will also check for ties.
     Returns a tuple (boolean flag - was there a tie?, most common value(s)).
     '''
-    # Value frequenct
+    # Value frequency
     value_counts = Counter(values)
     # Get the frequency of counts
     frequency_counts = value_counts.values()
-    # If the most common frequencty is greater than 1, there is a tie for most common value
+    # If the most common count frequency is greater than 1, there is a tie for most common value
     most_frequent_count = Counter(frequency_counts).most_common(1)[0][1]
     if most_frequent_count > 1:
-        # Tie?, values
-        # return the most common values
+        # Tie = True, return the most common values
         return (True, value_counts.most_common(most_frequent_count))
     else:
-        # Return the most common value
+        # Tie = False, return the most common value
         return (False, value_counts.most_common(1))
 
 def replace_all(text, replace_dict):
@@ -181,5 +178,6 @@ def parse_assessment_criteria(four_tuple):  # (A, B, C, D) - Yes/No
         return 'Not Specified'
 
 def extract_nepa_ids(string):
-    regex = r'DOI-BLM-CO-F[0-9oO]{1,5}-\d{2,4}-\d{1,4}[- ]\w+'  # Matching DOI-BLM-CO-F(digits, maybe oO)-date-seq type
+    # Matching DOI-BLM-CO-F(digits, maybe oO)-date-seq type
+    regex = r'DOI-BLM-CO-F[0-9oO]{1,5}-\d{2,4}-\d{1,4}[- ]\w+'  
     return re.findall(regex, string)
