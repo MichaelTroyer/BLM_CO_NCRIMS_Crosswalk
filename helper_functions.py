@@ -1,5 +1,6 @@
 from collections import Counter
 import dateutil
+import os
 import re
 
 import arcpy
@@ -160,5 +161,42 @@ def extract_nepa_ids(string):
     return re.findall(regex, string)
 
 
-def get_BLM_acres(fc, blm_lyr, id_field):
-    pass
+def get_BLM_acres(fc, blm_lyr, id_field, workspace='in_memory'):
+    """
+    fc: the input feature class to calculate BLM acres
+    blm_lyr: a feature layer of BLM lands specifically
+    id_field: a unique id field for the source fc
+    workspace: output location - defaults to in_memory
+
+    Intersect fc with blm_lyr, dissolve intersect on id_field,
+    add and calc acres field and update fc with calculated acreage
+    using a search cursor on the dissolved feature class
+    and subsequent update cursor on the source feature class.
+
+    Make sure there are no duplicates first!
+    """
+    intersect = arcpy.Intersect_analysis(
+        in_features=[fc, blm_lyr],
+        out_feature_class=os.path.join(workspace, 'intersect'),
+        join_attributes="ALL",
+        )
+    dissolve = arcpy.Dissolve_management(
+        in_features=intersect,
+        out_feature_class=os.path.join(workspace, 'dissolve'),
+        dissolve_field=id_field,
+        )
+    acre_field = id_field + '_acres'
+    arcpy.AddField_management(dissolve, acre_field, "DOUBLE", 15, 2)
+    arcpy.CalculateField_management(dissolve, acre_field, "!shape.area@ACRES!", "PYTHON_9.3")
+    fc_acres = {}
+    with arcpy.da.SearchCursor(dissolve, [id_field, acre_field]) as cur:
+        for row in cur:
+            fc_acres[row[0]] = row[1]
+    with arcpy.da.UpdateCursor(fc, [id_field, acre_field]) as cur:
+        for row in cur:
+            try:
+                row[1] = fea_acres[row[0]]
+            except KeyError:
+                # In case some did not intersect blm_lyr
+                row[1] = 0.0
+            cur.updateRow(row)

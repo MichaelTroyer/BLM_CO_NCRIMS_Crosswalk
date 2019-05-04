@@ -1,9 +1,0 @@
-OID,field,description
--1,Eligible A Only,Eligible A Only
--1,Eligible B Only,Eligible B Only
--1,Eligible C Only,Eligible C Only
--1,Eligible D Only,Eligible D Only
--1,"Eligible (A, B, and/or C)","Eligible (A, B, and/or C)"
--1,"Eligible ((A, B and/or C) and D)","Eligible ((A, B and/or C) and D)"
--1,Not Specified,Not Specified
--1,NA,Not Applicable

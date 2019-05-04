@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 """
   ____  _     __  __     ____ ___     _   _  ____ ____  _  __  __ ____  
  | __ )| |   |  \/  |   / ___/ _ \   | \ | |/ ___|  _ \| ||  \/  / ___| 
@@ -13,6 +12,7 @@
        \____|_| \_\\___/|____/____/  \_/\_/_/   \_\_____|_|\_\
 
 ¯\_(ツ)_/¯
+
 """
 
 description = """
@@ -23,7 +23,7 @@ Michael Troyer
 Updated:
 4/18/2019
 
-BLM Colorado National Cultural Resourse Information Mangement System Crosswalk
+BLM Colorado National Cultural Resources Information Mangement System Crosswalk
 """
 
 """
@@ -38,10 +38,10 @@ Usage:
 * 'site_type', 'NRC_A', 'NRC_B', 'NRC_C', 'NRC_D', 'feature', 'artifact',
 
 * Input Surveys FC must have fields named:
-* 'DOC_', 'LAST_AGENC', 'LAST_SOURC', 'LAST_DATE_', 'name', 'lead_agenc', 'institutio', 'method', 'completion', 'activity',
+* 'DOC_', 'LAST_AGENC', 'LAST_SOURC', 'LAST_DATE_', 'name', 'lead_agenc',
+* 'institutio', 'method', 'completion', 'activity',
 """
 
-# TODO: calculate BLM acres for sites and surveys
 # TODO: Spot check records
 # TODO: Review domain map
 # TODO: finish up the documen....
@@ -71,8 +71,8 @@ start_time = datetime.datetime.now()
 start_date = datetime.date(1900,1,1)  # SHPO dates are int days since 1/1/1900
 date_time_stamp = re.sub('[^0-9]', '', str(start_time)[2:16])
 
-gdb_template_xml = os.path.join(os.path.dirname(__file__), 'data', 'database_schema.xml')
-domain_map_csv = os.path.join(os.path.dirname(__file__), 'data', 'domain_map.csv')
+gdb_template_xml = os.path.join(os.path.dirname(__file__), 'data', 'NCRIMS_SCHEMA.xml')
+domain_map_csv = os.path.join(os.path.dirname(__file__), 'data', 'NCRIMS_DOMAINS.csv')
 
 ###################################################################################################
 ##
@@ -98,7 +98,6 @@ class Crosswalk_NCRIMS_Data(object):
     def getParameterInfo(self):
         """Define parameter definitions"""
 
-        ## PARAMETERS
         # Input SHPO Geodatabase
         src_gdb=arcpy.Parameter(
             displayName="Input SHPO Geodatabase",
@@ -148,8 +147,8 @@ class Crosswalk_NCRIMS_Data(object):
         has been changed."""
         # Defaults for easier testing - drop for prduction
         if not parameters[0].altered:
-            parameters[0].value = r'T:\CO\GIS\gisuser\rgfo\mtroyer\z-Tests\NCRIMS_Testing\blm_full_format_181019.gdb'
-            parameters[1].value = r'T:\CO\GIS\gisuser\rgfo\mtroyer\z-Tests\NCRIMS_Testing\test_output'
+            parameters[0].value = os.path.join(os.path.dirname(__file__), 'data', 'SHPO_SOURCE_DATA.gdb')
+            parameters[1].value = os.path.join(os.path.dirname(__file__), 'output')
             parameters[2].value = r'T:\ReferenceState\CO\CorporateData\lands\Surface Management Agency (CO) Transparent - No Private.lyr'
             parameters[3].value = False
         return
@@ -170,7 +169,7 @@ class Crosswalk_NCRIMS_Data(object):
     def execute(self, parameters, messages):
         """The source code of the tool."""
 
-        try:
+        try:  # Outer exception handling - errors at this level will stop program
             # Clear memory JIC
             deleteInMemory()
             
@@ -256,6 +255,7 @@ class Crosswalk_NCRIMS_Data(object):
                     domain_mapping[domain][src_val] = dmn_val
             for domain in domain_mapping.keys():
                  logger.log_all('Found domain [{}]'.format(domain))
+
 
             #######################################################################################
             ##
@@ -354,7 +354,7 @@ class Crosswalk_NCRIMS_Data(object):
                     if report_ix % 5000 == 0:
                         logger.console('Processed {} of {} rows..'.format(report_ix, n_rows))
 
-                    try:
+                    try:  # Inner exception handling - errors at this level will flag rows for removal
                         # The source data
                         OBJECTID       = row[0]        
                         SITE_          = row[1].strip()            
@@ -479,33 +479,33 @@ class Crosswalk_NCRIMS_Data(object):
                         else:
                             row[25] = 'Unknown'                    
 
-                        # Get most recent eligibility, authority, and date
-                        # RSRCE_NRHP_ELGBLE_STTS = row[22]
-                        # RSRCE_NRHP_ELGBLE_CRTRA = row[23]
-                        # RSRCE_NRHP_ELGBLE_AUTH_NM = row[24]
-                        # RSRCE_LAST_RCRD_DT = row[26] - year only as string
-                        # RSRCE_DATE = row[27] - full date value as date
+                        # Get most recent assessment eligibility, authority, and date
                         assessment = tbl_updates['Assessment'].get(SITE_)
                         if assessment:
                             assess_val = assessment['Assessment']
                             assess_date = assessment['date']
 
+                            # RSRCE_NRHP_ELGBLE_STTS = row[22]
                             dom_assess_val = map_domain_values(assess_val, domain_mapping['DOM_YES_NO_UNDTRMND'])
                             if not dom_assess_val:
                                 raise DomainError('DOM_YES_NO_UNDTRMND', assess_val)
                             row[22] = format_data(dom_assess_val, target_schema['RSRCE_NRHP_ELGBLE_STTS'])
 
                             try:
+                                # RSRCE_LAST_RCRD_DT = row[26] - year only as string
                                 row[26] = assess_date.year
                             except:
                                 row[26] = None
+                            # RSRCE_DATE = row[27] - full date value as date
                             row[27] = assess_date
 
+                            # RSRCE_NRHP_ELGBLE_AUTH_NM = row[24]
                             dom_elig_assess = map_domain_values(assess_val, domain_mapping['CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM'])
                             if not dom_elig_assess:
                                 raise DomainError('CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM', assess_val)
                             row[24] = format_data(dom_elig_assess, target_schema['RSRCE_NRHP_ELGBLE_AUTH_NM'])
 
+                            # RSRCE_NRHP_ELGBLE_CRTRA = row[23]
                             row[23] = parse_assessment_criteria((NRC_A, NRC_B, NRC_C, NRC_D))
                         else:
                             row[27], row[26], row[24], row[23], row[22] = None, None, 'NA', None, 'Unknown'
@@ -561,10 +561,9 @@ class Crosswalk_NCRIMS_Data(object):
                         error_rows.append(OBJECTID)
                         logger.logfile('[-] Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
 
-                    except Exception as e:  # We're Off the rails
+                    except Exception as e:  # We're Off the rails  \__/ -- -- >--|o (aaaahhh..)
                         error_rows.append(OBJECTID)
                         logger.logfile('[-] Unexpected Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
-
 
                     finally:
                         report_ix += 1
@@ -572,10 +571,9 @@ class Crosswalk_NCRIMS_Data(object):
             n_errors = len(error_rows)
             logger.log_all('Errors: {}'.format(n_errors))
             success_rate = (1-(float(n_errors)/n_rows))*100
-            logger.log_all('Success rate: {:.3}%'.format(success_rate))
+            logger.log_all('Success rate: {:.5}%'.format(success_rate))
  
-            # Clean up final feature class
-            # Move and remove error_rows
+            # Clean up final feature class - move and remove error_rows
             if error_rows:
                 logger.console('Quarantining error rows..')
                 where = buildWhereClauseFromList(working_lyr, 'OBJECTID', error_rows)
@@ -584,7 +582,6 @@ class Crosswalk_NCRIMS_Data(object):
                 arcpy.DeleteRows_management(working_lyr)
 
                 # Delete the derived fields from failure (so can be input again)
-                # Delete unnecessary fields
                 for field in arcpy.ListFields(failure):
                     if field.name in NCRIMS_fields:
                         try:
@@ -618,7 +615,11 @@ class Crosswalk_NCRIMS_Data(object):
                 for site_id, doc_id in site_survey_mapping:
                     cur.insertRow((site_id, doc_id))
             
-            #TODO: Update BLM Acres
+            # Update BLM Acres
+            blm_lyr = arcpy.MakeFeatureLayer_management(land_owner_lyr, r"in_memory\blm_lyr", "adm_manage='BLM'")
+            
+            logger.console('Updating Resource BLM_ACRES..')
+            get_BLM_acres(working_lyr, blm_lyr, 'RSRCE_SHPO_ID', workspace='in_memory')
 
 
             #######################################################################################
@@ -686,7 +687,8 @@ class Crosswalk_NCRIMS_Data(object):
 
             NCRIMS_fields = target_schema.keys()
             SHPO_fields = [
-                'DOC_', 'LAST_AGENC', 'LAST_SOURC', 'LAST_DATE_', 'name', 'lead_agenc', 'institutio', 'method', 'completion', 'activity',
+                'DOC_', 'LAST_AGENC', 'LAST_SOURC', 'LAST_DATE_', 'name', 'lead_agenc',
+                'institutio', 'method', 'completion', 'activity',
                 ]
 
             logger.logfile('SHPO investigation fields:\n{}'.format(SHPO_fields))
@@ -710,7 +712,7 @@ class Crosswalk_NCRIMS_Data(object):
                     if report_ix % 5000 == 0:
                         logger.console('Processed {} of {} rows..'.format(report_ix, n_rows))
 
-                    try:
+                    try:  # Inner exception handling - errors at this level will flag rows for removal
                         OBJECTID   = row[0]
                         DOC_       = row[1].strip()
                         LAST_AGENC = row[2].strip()
@@ -824,7 +826,7 @@ class Crosswalk_NCRIMS_Data(object):
                         error_rows.append(OBJECTID)
                         logger.logfile('[-] Error: [OID: {}][DOC: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
 
-                    except Exception as e:  # We're Off the rails
+                    except Exception as e:
                         error_rows.append(OBJECTID)
                         logger.logfile('[-] Unexpected Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
 
@@ -834,10 +836,9 @@ class Crosswalk_NCRIMS_Data(object):
             n_errors = len(error_rows)
             logger.log_all('Errors: {}'.format(n_errors))
             success_rate = (1-(float(n_errors)/n_rows))*100
-            logger.log_all('Success rate: {:.3}%'.format(success_rate))
+            logger.log_all('Success rate: {:.5}%'.format(success_rate))
  
-            # Clean up final feature class
-            # Move and remove error_rows
+            # Clean up final feature class - move and remove error_rows
             if error_rows:
                 logger.console('Quarantining error rows..')
                 where = buildWhereClauseFromList(working_lyr, 'OBJECTID', error_rows)
@@ -846,7 +847,6 @@ class Crosswalk_NCRIMS_Data(object):
                 arcpy.DeleteRows_management(working_lyr)
 
                 # Delete the derived fields from failure (so can be input again)
-                # Delete unnecesarry fields
                 for field in arcpy.ListFields(failure):
                     if field.name in NCRIMS_fields:
                         try:
@@ -874,7 +874,9 @@ class Crosswalk_NCRIMS_Data(object):
             logger.console('Updating GIS_ACRES..')
             arcpy.CalculateField_management(working_lyr, "GIS_ACRES", "!shape.area@ACRES!", "PYTHON_9.3")
 
-            #TODO: Update BLM Acres
+            # Update BLM Acres
+            logger.console('Updating BLM_ACRES..')
+            get_BLM_acres(working_lyr, blm_lyr, 'INVSTGTN_SHPO_ID', workspace='in_memory')        
 
 ###################################################################################################
 ##
@@ -885,7 +887,7 @@ class Crosswalk_NCRIMS_Data(object):
         # Top level exceptions - will bring the whole thing down
         except Exception as e:
             try:
-                logger.log_all(traceback.format_exc())
+                logger.logfile(traceback.format_exc())
             except:
                 pass
             arcpy.AddError(traceback.format_exc())
