@@ -23,10 +23,15 @@ Michael Troyer
 Updated:
 4/18/2019
 
-BLM Colorado National Cultural Resources Information Mangement System Crosswalk
+BLM Colorado National Cultural Resources Information Management System Crosswalk
 """
 
 """
+
+#TODO: Better documentation..
+Increment this counter everytime you admit you need better documentation but still don't do it:
+blownOffTheDocumentation = 21
+
 Usage:
 
 * Input FCs must be named: 'BLM_CO_Sites', 'BLM_CO_Surveys'
@@ -41,11 +46,6 @@ Usage:
 * 'DOC_', 'LAST_AGENC', 'LAST_SOURC', 'LAST_DATE_', 'name', 'lead_agenc',
 * 'institutio', 'method', 'completion', 'activity',
 """
-
-# TODO: Spot check records
-# TODO: Review domain map
-# TODO: finish up the documen....
-
 
 from collections import defaultdict
 from collections import OrderedDict
@@ -244,6 +244,7 @@ class Crosswalk_NCRIMS_Data(object):
             logger.log_all('Collections unique records: {}'.format(len(collections)))
 
             # Read in the domain mapping from CSV - necessary to keep up with source SHPO 'domain' changes
+            # Upper all source values to avoid having to match case
             domain_mapping = defaultdict(dict)
 
             logger.console('\n' + 'Reading domain mapping table..')
@@ -252,7 +253,7 @@ class Crosswalk_NCRIMS_Data(object):
                 # Skip the header row
                 csv_reader.next()
                 for domain, src_val, dmn_val in csv_reader:
-                    domain_mapping[domain][src_val] = dmn_val
+                    domain_mapping[domain][src_val.upper()] = dmn_val
             for domain in domain_mapping.keys():
                  logger.log_all('Found domain [{}]'.format(domain))
 
@@ -561,17 +562,18 @@ class Crosswalk_NCRIMS_Data(object):
                         error_rows.append(OBJECTID)
                         logger.logfile('[-] Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
 
-                    except Exception as e:  # We're Off the rails  \__/ -- -- >--|o (aaaahhh..)
+                    except Exception as e:
                         error_rows.append(OBJECTID)
                         logger.logfile('[-] Unexpected Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
 
                     finally:
                         report_ix += 1
 
+            logger.console('Complete..')
             n_errors = len(error_rows)
             logger.log_all('Errors: {}'.format(n_errors))
             success_rate = (1-(float(n_errors)/n_rows))*100
-            logger.log_all('Success rate: {:.5}%'.format(success_rate))
+            logger.log_all('Success rate: {:.4}%'.format(success_rate))
  
             # Clean up final feature class - move and remove error_rows
             if error_rows:
@@ -753,7 +755,7 @@ class Crosswalk_NCRIMS_Data(object):
 
                         # INVSTGTN_DATE = row[14] - use LAST_DATE_ and fillna with completion date
                         # INVSTGTN_CMPLT_MONTH_YR = row[13] from INVSTGTN_DATE
-                        if LAST_DATE_ > 30000:  # int days since 1/1/1900
+                        if LAST_DATE_ > 20000:  # int days since 1/1/1900
                             row_date = start_date + datetime.timedelta(LAST_DATE_)  
                             row[14] = row_date
                             row[13] = '{}-{}'.format(row_date.month, row_date.year)
@@ -833,10 +835,11 @@ class Crosswalk_NCRIMS_Data(object):
                     finally:
                         report_ix += 1
 
+            logger.console('Complete..')
             n_errors = len(error_rows)
             logger.log_all('Errors: {}'.format(n_errors))
             success_rate = (1-(float(n_errors)/n_rows))*100
-            logger.log_all('Success rate: {:.5}%'.format(success_rate))
+            logger.log_all('Success rate: {:.4}%'.format(success_rate))
  
             # Clean up final feature class - move and remove error_rows
             if error_rows:

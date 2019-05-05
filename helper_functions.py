@@ -1,5 +1,7 @@
 from collections import Counter
-import dateutil
+# import dateutil
+import datetime
+from dateutil import parser
 import os
 import re
 
@@ -46,27 +48,24 @@ def buildWhereClauseFromList(table, field, valueList):
     return whereClause
     
 
-def tryParseDate(date):
-    # Python Cookbook - Ver 2 - Recipe 3.7
-    # dateutil.parser expects a string
-    inPut = date
-    kwargs = {}
-    if isinstance(date, (list, tuple)):
-        date = ' '.join([str(x) for x in date])
-    if isinstance(date, int):
-        date = str(date)
-    if isinstance(date, dict):
-        kwargs = date
-        date = kwargs.pop('date')
+# BUG: The serverside install OF Python dateutil is incomplete - lacks parser which is a superior solution.
+# Try to get that figured out.
+# In the meantime be explicit with datetime.datetime.strptime(d, '%m/%d/%Y')
+def tryParseDate(date_string):
     try:
-        try:
-            parsedate = dateutil.parser.parse(date, **kwargs)
-            return parsedate.date()
-        except ValueError:
-            parsedate = dateutil.parser.parse(date, fuzzy=True, **kwargs)
-            return parsedate.date()
-    except:
-        raise FormatDateError(date)
+        return datetime.datetime.strptime(date_string, '%m/%d/%Y').date()
+    except Exception as e:
+        raise FormatDateError('could not parse date: {}'.format(repr(date_string), e))
+# def tryParseDate(date_string):
+#     try:
+#         try:
+#             parsedate = dateutil.parser.parse(date_string)
+#             return parsedate.date()
+#         except ValueError:
+#             parsedate = dateutil.parser.parse(date_string, fuzzy=True)
+#             return parsedate.date()
+#     except:
+#         raise FormatDateError('could not parse date: {}'.format(repr(date_string)))
 
 
 def format_data(input_data, dest_params):
@@ -86,8 +85,8 @@ def format_data(input_data, dest_params):
             # parse date - try to..
             clean_data = tryParseDate(input_data)
         return clean_data
-    except:
-        raise FormatDataError(input_data, dest_params)
+    except Exception as e:
+        raise FormatDataError('Could not format data:', repr(input_data), repr(dest_params), e)
 
 
 def get_most_common_with_ties(values):
@@ -108,8 +107,8 @@ def get_most_common_with_ties(values):
         else:
             # Tie = False, return the most common value
             return (False, value_counts.most_common(1))
-    except:
-        raise ValueCountError(values)
+    except Exception as e:
+        raise ValueCountError('Error counting values:', repr(values), e)
 
 
 def replace_all(text, replace_dict):
@@ -119,7 +118,10 @@ def replace_all(text, replace_dict):
 
 
 def extract_parentheticals(text):
-    # Exract and clean all parenthetical groups > 1 char in length
+    """
+    Exract and clean all parenthetical groups > 1 char in length
+    Returns origianl text and a list of parentheticals contents.
+    """
     # Get the outermost parentheticals
     parens = text[text.find("(")+1:text.rfind(")")]
     # Split on space and remove all the weird stuff - drop any single characters
@@ -131,9 +133,14 @@ def extract_parentheticals(text):
 
 
 def map_domain_values(raw_value, domain_mapping_dict):
-    """Translate raw_value against domain mapping.
-    Return None if not found"""
-    return domain_mapping_dict.get(raw_value, None)
+    """
+    Translate raw_value against domain mapping.
+    Return None if not found
+    Convert raw value to upper since in memory domain mapping is all upper
+    Eliminates need match case from source domain data.
+    """
+    return domain_mapping_dict.get(raw_value.upper(), None)
+    # return domain_mapping_dict.get(raw_value, None)
 
 
 def parse_assessment_criteria(four_tuple):  # (A, B, C, D) - Yes/No
@@ -170,7 +177,7 @@ def get_BLM_acres(fc, blm_lyr, id_field, workspace='in_memory'):
 
     Intersect fc with blm_lyr, dissolve intersect on id_field,
     add and calc acres field and update fc with calculated acreage
-    using a search cursor on the dissolved feature class
+    using a search cursor on the dissolved feature class to create a dict {id: acres}
     and subsequent update cursor on the source feature class.
 
     Make sure there are no duplicates first!
@@ -192,10 +199,10 @@ def get_BLM_acres(fc, blm_lyr, id_field, workspace='in_memory'):
     with arcpy.da.SearchCursor(dissolve, [id_field, acre_field]) as cur:
         for row in cur:
             fc_acres[row[0]] = row[1]
-    with arcpy.da.UpdateCursor(fc, [id_field, acre_field]) as cur:
+    with arcpy.da.UpdateCursor(fc, [id_field, 'BLM_ACRES']) as cur:
         for row in cur:
             try:
-                row[1] = fea_acres[row[0]]
+                row[1] = fc_acres[row[0]]
             except KeyError:
                 # In case some did not intersect blm_lyr
                 row[1] = 0.0

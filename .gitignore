@@ -103,7 +103,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# DOn't copy geodatabases
+# Don't copy geodatabases
 *.gdb
 
 /output
