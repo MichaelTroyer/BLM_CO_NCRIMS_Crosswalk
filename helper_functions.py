@@ -55,7 +55,7 @@ def tryParseDate(date_string):
     try:
         return datetime.datetime.strptime(date_string, '%m/%d/%Y').date()
     except Exception as e:
-        raise FormatDateError('could not parse date: {}'.format(repr(date_string), e))
+        raise FormatDateError('could not parse date:', repr(date_string), e)
 # def tryParseDate(date_string):
 #     try:
 #         try:
@@ -64,8 +64,8 @@ def tryParseDate(date_string):
 #         except ValueError:
 #             parsedate = dateutil.parser.parse(date_string, fuzzy=True)
 #             return parsedate.date()
-#     except:
-#         raise FormatDateError('could not parse date: {}'.format(repr(date_string)))
+#     except Exception as e:
+#         raise FormatDateError('could not parse date:', repr(date_string), e)
 
 
 def format_data(input_data, dest_params):
