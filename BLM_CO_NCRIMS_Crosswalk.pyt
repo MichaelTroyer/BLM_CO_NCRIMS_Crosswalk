@@ -826,11 +826,11 @@ class Crosswalk_NCRIMS_Data(object):
 
                     except NCRIMSError as e:
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] Error: [OID: {}][DOC: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
+                        logger.logfile('[-] Error: [OID: {}][DOC: {}]\n{}'.format(OBJECTID, DOC_, traceback.format_exc()))
 
                     except Exception as e:
                         error_rows.append(OBJECTID)
-                        logger.logfile('[-] Unexpected Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, SITE_, traceback.format_exc()))
+                        logger.logfile('[-] Unexpected Error: [OID: {}][SITE: {}]\n{}'.format(OBJECTID, DOC_, traceback.format_exc()))
 
                     finally:
                         report_ix += 1
