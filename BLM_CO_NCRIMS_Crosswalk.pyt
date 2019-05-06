@@ -811,7 +811,6 @@ class Crosswalk_NCRIMS_Data(object):
                         row[21] = 'CO SHPO'
 
                         # INVSTGTN_CMT = row[22]
-                        # Did I add any comments??
                         row[22] = format_data(comments, target_schema['INVSTGTN_CMT'])
 
                         # ADMIN_ST = row[23] - default CO

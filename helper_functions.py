@@ -1,7 +1,7 @@
 from collections import Counter
+from dateutil.parser import parse
 # import dateutil
 import datetime
-from dateutil import parser
 import os
 import re
 
@@ -48,24 +48,21 @@ def buildWhereClauseFromList(table, field, valueList):
     return whereClause
     
 
-# BUG: The serverside install OF Python dateutil is incomplete - lacks parser which is a superior solution.
-# Try to get that figured out.
-# In the meantime be explicit with datetime.datetime.strptime(d, '%m/%d/%Y')
-def tryParseDate(date_string):
-    try:
-        return datetime.datetime.strptime(date_string, '%m/%d/%Y').date()
-    except Exception as e:
-        raise FormatDateError('could not parse date:', repr(date_string), e)
 # def tryParseDate(date_string):
 #     try:
-#         try:
-#             parsedate = dateutil.parser.parse(date_string)
-#             return parsedate.date()
-#         except ValueError:
-#             parsedate = dateutil.parser.parse(date_string, fuzzy=True)
-#             return parsedate.date()
+#         return datetime.datetime.strptime(date_string, '%m/%d/%Y').date()
 #     except Exception as e:
 #         raise FormatDateError('could not parse date:', repr(date_string), e)
+def tryParseDate(date_string):
+    try:
+        try:
+            parsedate = parse(date_string)
+            return parsedate.date()
+        except ValueError:
+            parsedate = parse(date_string, fuzzy=True)
+            return parsedate.date()
+    except Exception as e:
+        raise FormatDateError('could not parse date:', repr(date_string), e)
 
 
 def format_data(input_data, dest_params):
