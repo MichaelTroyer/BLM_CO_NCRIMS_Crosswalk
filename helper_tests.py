@@ -1,6 +1,6 @@
 import unittest
 
-# Need a reference to arcpy for offline testing
+# Need a reference to arcpy to prevent error on helper_functions import
 # REQUIRES A LOCAL INSTALL OF ArcMap or ArcPro!!
 import archook
 archook.get_arcpy()
@@ -9,7 +9,6 @@ import arcpy
 
 from helper_functions import tryParseDate
 from helper_functions import getMostCommonWithTies
-from helper_functions import replaceAll
 from helper_functions import extractParentheticals
 from helper_functions import parseAssessmentCriteria
 from helper_functions import extractNepaIds
@@ -48,6 +47,24 @@ class TestGetMostCommonWithTies(unittest.TestCase):
         self.assertEqual(getMostCommonWithTies(double_no_tie), double_no_tie_result)
         self.assertEqual(getMostCommonWithTies(double_ties), double_ties_result)
 
+
+class TestExtractParentheticals(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def testExtract(self):
+        single_paren = 'This is a lame test (or is it?!)'
+        double_paren = 'This is a weird way (to) (store text..)'
+        nested_paren = 'Now we are really (in the (weeds))'
+
+        single_paren_result = ('This is a lame test (or is it?!)', ['(or is it?!)'])
+        double_paren_result = ('This is a weird way (to) (store text..)', ['(to)', '(store text..)'])
+        nested_paren_result = ('Now we are really (in the (weeds)', ['(in the (weeds))'])
+        
+        self.assertEqual(extractParentheticals(single_paren), single_paren_result)
+        self.assertEqual(extractParentheticals(double_paren), double_paren_result)
+        self.assertEqual(extractParentheticals(nested_paren), nested_paren_result)
 
 
 if __name__ == '__main__':

@@ -113,25 +113,28 @@ def getMostCommonWithTies(values):
         raise ValueCountError('Error counting values:', repr(values), e)
 
 
-def replaceAll(text, replace_dict):
-    for src, tgt in replace_dict.iteritems():
-        text = text.replace(src, tgt)
-    return text
+# def replaceAll(text, replace_dict):
+#     for src, tgt in replace_dict.iteritems():
+#         text = text.replace(src, tgt)
+#     return text
 
 
 def extractParentheticals(text):
-    """
-    Exract and clean all parenthetical groups > 1 char in length
-    Returns origianl text and a list of parentheticals contents.
-    """
-    # Get the outermost parentheticals
-    parens = text[text.find("(")+1:text.rfind(")")]
-    # Split on space and remove all the weird stuff - drop any single characters
-    clean_parens = [
-        p for p
-        in replaceAll(parens, {'(': ' ', ')': ' '}).split()
-        if len(p) > 1]
-    return text, clean_parens
+    parentheticals = re.findall('\(.*?\)+', text)
+    return text, parentheticals
+# def extractParentheticals(text):
+#     """
+#     Exract and clean all parenthetical groups > 1 char in length
+#     Returns origianl text and a list of parentheticals contents.
+#     """
+#     # Get the outermost parentheticals
+#     parens = text[text.find("(")+1:text.rfind(")")]
+#     # Split on space and remove all the weird stuff - drop any single characters
+#     clean_parens = [
+#         p for p
+#         in replaceAll(parens, {'(': ' ', ')': ' '}).split()
+#         if len(p) > 1]
+#     return text, clean_parens
 
 
 def mapDomainValues(raw_value, domain_mapping_dict):
