@@ -30,8 +30,8 @@ BLM Colorado National Cultural Resources Information Management System Crosswalk
 
 #TODO: Better documentation..
 Increment this counter everytime you admit you need better documentation but still don't do it:
-blownOffTheDocumentation = 21
-#TODO: delete duplicate tables if empty
+blownOffTheDocs = 21
+
 Usage:
 
 * Input FCs must be named: 'BLM_CO_Sites', 'BLM_CO_Surveys'
@@ -285,6 +285,8 @@ class Crosswalk_NCRIMS_Data(object):
             arcpy.FindIdentical_management(working_lyr, duplicates, 'SITE_', output_record_option='ONLY_DUPLICATES')
             if int(arcpy.GetCount_management(duplicates).getOutput(0)):
                 logger.log_all('WARNING: Duplicate Site IDs found - see duplicate table for details\n')
+            else:
+                arcpy.Delete_management(duplicates)
 
             n_rows = int(arcpy.GetCount_management(working_lyr).getOutput(0))
             logger.log_all('Resources: {} total rows..\n'.format(n_rows))
@@ -651,6 +653,8 @@ class Crosswalk_NCRIMS_Data(object):
             arcpy.FindIdentical_management(working_lyr, duplicates, 'DOC_', output_record_option='ONLY_DUPLICATES')
             if int(arcpy.GetCount_management(duplicates).getOutput(0)):
                 logger.log_all('WARNING: Duplicate Survey IDs found - see duplicate table for details\n')
+            else:
+                arcpy.Delete_management(duplicates)
 
             n_rows = int(arcpy.GetCount_management(working_lyr).getOutput(0))
             logger.log_all('Investigations: {} total rows..\n'.format(n_rows))
