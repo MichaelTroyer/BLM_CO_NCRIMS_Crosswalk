@@ -120,6 +120,11 @@ def getMostCommonWithTies(values):
 
 
 def extractParentheticals(text):
+    """
+    Match single, double, and nested parentheticals.
+    Return original text and a a list of parenthetical groups.
+    Nested parentheticals are returned as a single entry.
+    """
     parentheticals = re.findall('\(.*?\)+', text)
     return text, parentheticals
 # def extractParentheticals(text):
