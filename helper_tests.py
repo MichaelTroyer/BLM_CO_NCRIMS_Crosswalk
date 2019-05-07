@@ -30,7 +30,6 @@ class TestTryParseDate(unittest.TestCase):
 
 
 class TestGetMostCommonWithTies(unittest.TestCase):
-
     def setUp(self):
         pass
 
@@ -49,7 +48,6 @@ class TestGetMostCommonWithTies(unittest.TestCase):
 
 
 class TestExtractParentheticals(unittest.TestCase):
-
     def setUp(self):
         pass
 
@@ -60,11 +58,53 @@ class TestExtractParentheticals(unittest.TestCase):
 
         single_paren_result = ('This is a lame test (or is it?!)', ['(or is it?!)'])
         double_paren_result = ('This is a weird way (to) (store text..)', ['(to)', '(store text..)'])
-        nested_paren_result = ('Now we are really (in the (weeds)', ['(in the (weeds))'])
+        nested_paren_result = ('Now we are really (in the (weeds))', ['(in the (weeds))'])
         
         self.assertEqual(extractParentheticals(single_paren), single_paren_result)
         self.assertEqual(extractParentheticals(double_paren), double_paren_result)
         self.assertEqual(extractParentheticals(nested_paren), nested_paren_result)
+
+
+class TestParseAssessmentCriteria(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def testParseCriteria(self):
+        tests = {
+            ('Yes', 'No', 'No', 'No') : 'Eligible A Only',
+            ('No', 'Yes', 'No', 'No') : 'Eligible B Only',
+            ('No', 'No', 'Yes', 'No') : 'Eligible C Only',
+            ('No', 'No', 'No', 'Yes') : 'Eligible D Only',
+            ('Yes', 'Yes', 'No', 'No') : 'Eligible (A, B, and/or C)',
+            ('Yes', 'No', 'Yes', 'No') : 'Eligible (A, B, and/or C)',
+            ('Yes', 'No', 'No', 'Yes') : 'Eligible ((A, B and/or C) and D)',
+            ('No', 'Yes', 'Yes', 'No') : 'Eligible (A, B, and/or C)',
+            ('No', 'Yes', 'No', 'Yes') : 'Eligible ((A, B and/or C) and D)',
+            ('No', 'No', 'Yes', 'Yes') : 'Eligible ((A, B and/or C) and D)',
+            ('Yes', 'Yes', 'Yes', 'No') : 'Eligible (A, B, and/or C)',
+            ('Yes', 'Yes', 'No', 'Yes') : 'Eligible ((A, B and/or C) and D)',
+            ('No', 'Yes', 'Yes', 'Yes') : 'Eligible ((A, B and/or C) and D)',
+            ('No', 'No', 'No', 'No') : 'Not Specified',
+            }
+        for test_value, test_result in tests.iteritems():
+            self.assertEqual(parseAssessmentCriteria(test_value), test_result)
+
+
+class TestExtractNepaIds(unittest.TestCase):
+    def setUp(self):
+        pass
+
+    def testExtractNepa(self):
+        # DOI-BLM-CO-F(digits, maybe oO)-date-seq type
+        nepa_tests = {
+            'Blah, blah, DOI-BLM-CO-F020-2012-0039 CX, blah, blah': ['DOI-BLM-CO-F020-2012-0039 CX'],
+            'Blah, blah, DOI-BLM-CO-F020-2012-39 DNA, blah, blah': ['DOI-BLM-CO-F020-2012-39 DNA'],
+            'Blah, blah, DOI-BLM-CO-F020-12-039 EA, blah, blah': ['DOI-BLM-CO-F020-12-039 EA'],
+            'Blah, blah, DOI-BLM-CO-FO20-2012-0039 CX, blah, blah': ['DOI-BLM-CO-FO20-2012-0039 CX'],
+            'Blah, blah, DOI-BLM-CO-FO200-12-0039 CX, blah, blah': ['DOI-BLM-CO-FO200-12-0039 CX'],
+        }
+        for test_value, test_result in nepa_tests.iteritems():
+            self.assertEqual(extractNepaIds(test_value), test_result)
 
 
 if __name__ == '__main__':

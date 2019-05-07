@@ -12,8 +12,10 @@ from custom_exceptions import ValueCountError
 
 
 def deleteInMemory():
-    """Delete in memory tables and feature classes
-       reset to original worksapce when done"""
+    """
+    Delete in memory tables and feature classes.
+    Reset to original worksapce when done.
+    """
     # get the original workspace location
     orig_workspace = arcpy.env.workspace
     # Set the workspace to in_memory
@@ -33,8 +35,10 @@ def deleteInMemory():
 
 
 def buildWhereClauseFromList(table, field, valueList):
-    """Takes a list of values and constructs a SQL WHERE
-       clause to select those values within a given field and table."""
+    """
+    Takes a list of values and constructs a SQL WHERE
+    clause to select those values within a given field and table.
+    """
     # Add DBMS-specific field delimiters
     fieldDelimited = arcpy.AddFieldDelimiters(arcpy.Describe(table).path, field)
     # Determine field type
@@ -47,11 +51,6 @@ def buildWhereClauseFromList(table, field, valueList):
     return whereClause
     
 
-# def tryParseDate(date_string):
-#     try:
-#         return datetime.datetime.strptime(date_string, '%m/%d/%Y').date()
-#     except Exception as e:
-#         raise FormatDateError('could not parse date:', repr(date_string), e)
 def tryParseDate(date_string):
     try:
         try:
@@ -65,9 +64,11 @@ def tryParseDate(date_string):
 
 
 def formatData(input_data, dest_params):
-    '''accepts an input dictionary of field format parameters and matches input data to it
-       note: the state standard only includes text, double, and date formats
-       Will truncate text!'''
+    """
+    Accepts an input dictionary of field format parameters and matches input data to it
+    note: the state standard only includes text, double, and date formats
+    Will truncate text!
+    """
     try:
         # string, date, double
         if dest_params['TYPE'] == 'String':
@@ -113,12 +114,6 @@ def getMostCommonWithTies(values):
         raise ValueCountError('Error counting values:', repr(values), e)
 
 
-# def replaceAll(text, replace_dict):
-#     for src, tgt in replace_dict.iteritems():
-#         text = text.replace(src, tgt)
-#     return text
-
-
 def extractParentheticals(text):
     """
     Match single, double, and nested parentheticals.
@@ -127,19 +122,6 @@ def extractParentheticals(text):
     """
     parentheticals = re.findall('\(.*?\)+', text)
     return text, parentheticals
-# def extractParentheticals(text):
-#     """
-#     Exract and clean all parenthetical groups > 1 char in length
-#     Returns origianl text and a list of parentheticals contents.
-#     """
-#     # Get the outermost parentheticals
-#     parens = text[text.find("(")+1:text.rfind(")")]
-#     # Split on space and remove all the weird stuff - drop any single characters
-#     clean_parens = [
-#         p for p
-#         in replaceAll(parens, {'(': ' ', ')': ' '}).split()
-#         if len(p) > 1]
-#     return text, clean_parens
 
 
 def mapDomainValues(raw_value, domain_mapping_dict):
@@ -180,17 +162,17 @@ def extractNepaIds(string):
 
 def getBLMAcres(fc, blm_lyr, id_field, workspace='in_memory'):
     """
-    fc: the input feature class to calculate BLM acres
-    blm_lyr: a feature layer of BLM lands specifically
-    id_field: a unique id field for the source fc
-    workspace: output location - defaults to in_memory
-
     Intersect fc with blm_lyr, dissolve intersect on id_field,
     add and calc acres field and update fc with calculated acreage
     using a search cursor on the dissolved feature class to create a dict {id: acres}
     and subsequent update cursor on the source feature class.
 
     Make sure there are no duplicates first!
+
+    fc: the input feature class to calculate BLM acres
+    blm_lyr: a feature layer of BLM lands specifically
+    id_field: a unique id field for the source fc
+    workspace: output location - defaults to in_memory
     """
     intersect = arcpy.Intersect_analysis(
         in_features=[fc, blm_lyr],
