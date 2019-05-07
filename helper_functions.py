@@ -1,6 +1,5 @@
 from collections import Counter
 from dateutil.parser import parse
-# import dateutil
 import datetime
 import os
 import re
@@ -65,7 +64,7 @@ def tryParseDate(date_string):
         raise FormatDateError('could not parse date:', repr(date_string), e)
 
 
-def format_data(input_data, dest_params):
+def formatData(input_data, dest_params):
     '''accepts an input dictionary of field format parameters and matches input data to it
        note: the state standard only includes text, double, and date formats
        Will truncate text!'''
@@ -86,7 +85,7 @@ def format_data(input_data, dest_params):
         raise FormatDataError('Could not format data:', repr(input_data), repr(dest_params), e)
 
 
-def get_most_common_with_ties(values):
+def getMostCommonWithTies(values):
     '''
     Find the most common values in a list of values. Will also check for ties.
     Returns a tuple (boolean flag - was there a tie?, most common value(s)).
@@ -108,13 +107,13 @@ def get_most_common_with_ties(values):
         raise ValueCountError('Error counting values:', repr(values), e)
 
 
-def replace_all(text, replace_dict):
+def replaceAll(text, replace_dict):
     for src, tgt in replace_dict.iteritems():
         text = text.replace(src, tgt)
     return text
 
 
-def extract_parentheticals(text):
+def extractParentheticals(text):
     """
     Exract and clean all parenthetical groups > 1 char in length
     Returns origianl text and a list of parentheticals contents.
@@ -124,12 +123,12 @@ def extract_parentheticals(text):
     # Split on space and remove all the weird stuff - drop any single characters
     clean_parens = [
         p for p
-        in replace_all(parens, {'(': ' ', ')': ' '}).split()
+        in replaceAll(parens, {'(': ' ', ')': ' '}).split()
         if len(p) > 1]
     return text, clean_parens
 
 
-def map_domain_values(raw_value, domain_mapping_dict):
+def mapDomainValues(raw_value, domain_mapping_dict):
     """
     Translate raw_value against domain mapping.
     Return None if not found
@@ -140,7 +139,7 @@ def map_domain_values(raw_value, domain_mapping_dict):
     # return domain_mapping_dict.get(raw_value, None)
 
 
-def parse_assessment_criteria(four_tuple):  # (A, B, C, D) - Yes/No
+def parseAssessmentCriteria(four_tuple):  # (A, B, C, D) - Yes/No
     criteria = [True if c=='Yes' else False for c in four_tuple]
     criteria_cnt = sum(criteria)
     if criteria_cnt == 4:
@@ -159,13 +158,13 @@ def parse_assessment_criteria(four_tuple):  # (A, B, C, D) - Yes/No
         return 'Not Specified'
 
 
-def extract_nepa_ids(string):
+def extractNepaIds(string):
     # Matching DOI-BLM-CO-F(digits, maybe oO)-date-seq type
     regex = r'DOI-BLM-CO-F[0-9oO]{1,5}-\d{2,4}-\d{1,4}[- ]\w+'  
     return re.findall(regex, string)
 
 
-def get_BLM_acres(fc, blm_lyr, id_field, workspace='in_memory'):
+def getBLMAcres(fc, blm_lyr, id_field, workspace='in_memory'):
     """
     fc: the input feature class to calculate BLM acres
     blm_lyr: a feature layer of BLM lands specifically

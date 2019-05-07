@@ -31,7 +31,7 @@ BLM Colorado National Cultural Resources Information Management System Crosswalk
 #TODO: Better documentation..
 Increment this counter everytime you admit you need better documentation but still don't do it:
 blownOffTheDocumentation = 21
-
+#TODO: delete duplicate tables if empty
 Usage:
 
 * Input FCs must be named: 'BLM_CO_Sites', 'BLM_CO_Surveys'
@@ -409,17 +409,17 @@ class Crosswalk_NCRIMS_Data(object):
                         # RSRCE_NM = row[17]
                         # RSRCE_NM is name
                         if name:
-                            row[17] = format_data(name, target_schema['RSRCE_NM'])
+                            row[17] = formatData(name, target_schema['RSRCE_NM'])
                         else:
                             row[17] = None
 
                         # RSRCE_TMPRL_CLTRL_ASGNMNT = row[18]
                         # Domain translate resource type
                         if resource_type:
-                            dom_resource_type = map_domain_values(resource_type, domain_mapping['CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT'])
+                            dom_resource_type = mapDomainValues(resource_type, domain_mapping['CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT'])
                             if not dom_resource_type:
                                 raise DomainError('CRM_DOM_RSRCE_TMPRL_CLTRL_ASGNMNT', resource_type)
-                            row[18] = format_data(dom_resource_type, target_schema['RSRCE_TMPRL_CLTRL_ASGNMNT'])
+                            row[18] = formatData(dom_resource_type, target_schema['RSRCE_TMPRL_CLTRL_ASGNMNT'])
                         else:
                             row[18] = 'Unknown'
 
@@ -443,11 +443,11 @@ class Crosswalk_NCRIMS_Data(object):
                         if resource_categories:
                             # String together all the relevant categories
                             rsrce_cat = ', '.join(sorted(resource_categories))
-                            row[21] = format_data(rsrce_cat, target_schema['RSRCE_CAT'])
+                            row[21] = formatData(rsrce_cat, target_schema['RSRCE_CAT'])
                             # Remap each value to its corresponding domain value
                             primary_categories = set()
                             for rc in resource_categories:
-                                dom_rc = map_domain_values(rc, domain_mapping['CRM_DOM_RSRCE_PRMRY_CAT'])
+                                dom_rc = mapDomainValues(rc, domain_mapping['CRM_DOM_RSRCE_PRMRY_CAT'])
                                 if not dom_rc:
                                     raise DomainError('CRM_DOM_RSRCE_PRMRY_CAT', rc)
                                 primary_categories.add(dom_rc)
@@ -456,13 +456,13 @@ class Crosswalk_NCRIMS_Data(object):
                             if len(primary_categories) > 1 and 'Unknown' in primary_categories:
                                 primary_categories = [pc for pc in primary_categories if pc != 'Unknown']
                             # Pick the most common category, flag ties for manual inspection
-                            tie, most_common_res_cat = get_most_common_with_ties(primary_categories)
+                            tie, most_common_res_cat = getMostCommonWithTies(primary_categories)
                             if tie:
                                 res_vals = [val for val, ct in most_common_res_cat]
                                 comments += '[RESOURCE CATEGORY UNRESOLVED: {}] '.format(', '.join(res_vals))
                             # Break ties alphabetically - all we can do really..
                             max_res_cat = most_common_res_cat[0][0]
-                            row[20] = format_data(max_res_cat, target_schema['RSRCE_PRMRY_CTGRY_NM'])
+                            row[20] = formatData(max_res_cat, target_schema['RSRCE_PRMRY_CTGRY_NM'])
     
                         else:
                             row[20], row[21] = None, None
@@ -473,10 +473,10 @@ class Crosswalk_NCRIMS_Data(object):
                         if cnd:
                             cnd_val = cnd['Condition']
                             cnd_date = cnd['date']
-                            dom_cnd_val = map_domain_values(cnd_val, domain_mapping['CRM_DOM_RSRCE_CNDTN_ASSMNT'])
+                            dom_cnd_val = mapDomainValues(cnd_val, domain_mapping['CRM_DOM_RSRCE_CNDTN_ASSMNT'])
                             if not dom_cnd_val:
                                 raise DomainError('CRM_DOM_RSRCE_CNDTN_ASSMNT', cnd_val)
-                            row[25] = format_data(dom_cnd_val, target_schema['RSRCE_CNDTN_ASSMNT'])
+                            row[25] = formatData(dom_cnd_val, target_schema['RSRCE_CNDTN_ASSMNT'])
                         else:
                             row[25] = 'Unknown'                    
 
@@ -487,10 +487,10 @@ class Crosswalk_NCRIMS_Data(object):
                             assess_date = assessment['date']
 
                             # RSRCE_NRHP_ELGBLE_STTS = row[22]
-                            dom_assess_val = map_domain_values(assess_val, domain_mapping['DOM_YES_NO_UNDTRMND'])
+                            dom_assess_val = mapDomainValues(assess_val, domain_mapping['DOM_YES_NO_UNDTRMND'])
                             if not dom_assess_val:
                                 raise DomainError('DOM_YES_NO_UNDTRMND', assess_val)
-                            row[22] = format_data(dom_assess_val, target_schema['RSRCE_NRHP_ELGBLE_STTS'])
+                            row[22] = formatData(dom_assess_val, target_schema['RSRCE_NRHP_ELGBLE_STTS'])
 
                             try:
                                 # RSRCE_LAST_RCRD_DT = row[26] - year only as string
@@ -501,13 +501,13 @@ class Crosswalk_NCRIMS_Data(object):
                             row[27] = assess_date
 
                             # RSRCE_NRHP_ELGBLE_AUTH_NM = row[24]
-                            dom_elig_assess = map_domain_values(assess_val, domain_mapping['CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM'])
+                            dom_elig_assess = mapDomainValues(assess_val, domain_mapping['CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM'])
                             if not dom_elig_assess:
                                 raise DomainError('CRM_DOM_RSRCE_NRHP_ELGBLE_AUTH_NM', assess_val)
-                            row[24] = format_data(dom_elig_assess, target_schema['RSRCE_NRHP_ELGBLE_AUTH_NM'])
+                            row[24] = formatData(dom_elig_assess, target_schema['RSRCE_NRHP_ELGBLE_AUTH_NM'])
 
                             # RSRCE_NRHP_ELGBLE_CRTRA = row[23]
-                            row[23] = parse_assessment_criteria((NRC_A, NRC_B, NRC_C, NRC_D))
+                            row[23] = parseAssessmentCriteria((NRC_A, NRC_B, NRC_C, NRC_D))
                         else:
                             row[27], row[26], row[24], row[23], row[22] = None, None, 'NA', None, 'Unknown'
 
@@ -528,7 +528,7 @@ class Crosswalk_NCRIMS_Data(object):
                         if artifact:
                             comments += '[ARTIFACTS: {}] '.format(artifact.replace('>', ', '))
 
-                        row[31] = format_data(comments, target_schema['RSRCE_CMT'])
+                        row[31] = formatData(comments, target_schema['RSRCE_CMT'])
 
                         # RSRCE_SITE_DOC_ID = row[32]
                         # Get all the relevant surveys for each site to update many-to-many link table
@@ -537,14 +537,14 @@ class Crosswalk_NCRIMS_Data(object):
                             for doc_id in doc_ids:
                                 site_survey_mapping.append((SITE_, doc_id))
                             id_string = ', '.join(sorted(doc_ids))
-                            row[32] = format_data(id_string, target_schema['RSRCE_SITE_DOC_ID'])
+                            row[32] = formatData(id_string, target_schema['RSRCE_SITE_DOC_ID'])
                         else:
                             row[32] = None
 
                         # RSRCE_SITE_DOC_NAME = row[33] - get all the survey names!
                         if site_doc_name:
                             site_doc_name = ', '.join(['[{}]'.format(s) for s in site_doc_name.split('>')])
-                            row[33] = format_data(site_doc_name, target_schema['RSRCE_SITE_DOC_NAME'])
+                            row[33] = formatData(site_doc_name, target_schema['RSRCE_SITE_DOC_NAME'])
                         else:
                             row[33] = None
                         
@@ -621,7 +621,7 @@ class Crosswalk_NCRIMS_Data(object):
             blm_lyr = arcpy.MakeFeatureLayer_management(land_owner_lyr, r"in_memory\blm_lyr", "adm_manage='BLM'")
             
             logger.console('Updating Resource BLM_ACRES..')
-            get_BLM_acres(working_lyr, blm_lyr, 'RSRCE_SHPO_ID', workspace='in_memory')
+            getBLMAcres(working_lyr, blm_lyr, 'RSRCE_SHPO_ID', workspace='in_memory')
 
 
             #######################################################################################
@@ -748,10 +748,10 @@ class Crosswalk_NCRIMS_Data(object):
                         comments = ''
 
                         # INVSTGTN_AGCY_ID = row[11] - Agency - can potentially mine from name with re
-                        row[11] = format_data(LAST_AGENC, target_schema['INVSTGTN_AGCY_ID'])
+                        row[11] = formatData(LAST_AGENC, target_schema['INVSTGTN_AGCY_ID'])
 
                         # INVSTGTN_SHPO_ID = row[12] - DOC_
-                        row[12] = format_data(DOC_, target_schema['INVSTGTN_SHPO_ID'])
+                        row[12] = formatData(DOC_, target_schema['INVSTGTN_SHPO_ID'])
 
                         # INVSTGTN_DATE = row[14] - use LAST_DATE_ and fillna with completion date
                         # INVSTGTN_CMPLT_MONTH_YR = row[13] from INVSTGTN_DATE
@@ -771,38 +771,38 @@ class Crosswalk_NCRIMS_Data(object):
 
                         # INVSTGTN_TITLE = row[16] - name
                         # Invenstigation Titles contain additional non-standard NEPA IDs and other info - move to comments
-                        name, parentheticals = extract_parentheticals(name)
-                        row[16] = format_data(name, target_schema['INVSTGTN_TITLE'])
+                        name, parentheticals = extractParentheticals(name)
+                        row[16] = formatData(name, target_schema['INVSTGTN_TITLE'])
                         if parentheticals:
                             comments += ', '.join(parentheticals)
 
                         # INVSTGTN_AUTH = row[17] - activity
                         if activity:
-                            dom_activity = map_domain_values(activity, domain_mapping['CRM_DOM_INVSTGTN_AUTH'])
+                            dom_activity = mapDomainValues(activity, domain_mapping['CRM_DOM_INVSTGTN_AUTH'])
                             if not dom_activity:
                                 raise DomainError('CRM_DOM_INVSTGTN_AUTH', activity)
-                            row[17] = format_data(dom_activity, target_schema['INVSTGTN_AUTH'])
+                            row[17] = formatData(dom_activity, target_schema['INVSTGTN_AUTH'])
                         else:
                             row[17] = 'Unknown'
 
                         # INVSTGTN_CL = row[18] - method
                         if method:
-                                dom_method = map_domain_values(method, domain_mapping['CRM_DOM_INVSTGTN_CL'])
+                                dom_method = mapDomainValues(method, domain_mapping['CRM_DOM_INVSTGTN_CL'])
                                 if not dom_method:
                                     raise DomainError('CRM_DOM_INVSTGTN_CL', method)
-                                row[18] = format_data(dom_method, target_schema['INVSTGTN_CL']) 
+                                row[18] = formatData(dom_method, target_schema['INVSTGTN_CL']) 
                         else:
                             row[18] = 'Unknown'
 
                         # INVSTGTN_PRFRM_PARTY_NM = row[19] - institution
-                        row[19] = format_data(institutio, target_schema['INVSTGTN_PRFRM_PARTY_NM'])
+                        row[19] = formatData(institutio, target_schema['INVSTGTN_PRFRM_PARTY_NM'])
 
                         # INVSTGTN_NEPA_ID = row[20] -  mine from name. Maybe pull related tables from BLM src?
                         if name:
-                            nepa_ids = extract_nepa_ids(name)
+                            nepa_ids = extractNepaIds(name)
                             if nepa_ids:
                                 nepa_str = ', '.join(nepa_ids)
-                                row[20] = format_data(nepa_str, target_schema['INVSTGTN_NEPA_ID'])
+                                row[20] = formatData(nepa_str, target_schema['INVSTGTN_NEPA_ID'])
                             else:
                                 row[20] = 'Unknown'
                         else:
@@ -811,7 +811,7 @@ class Crosswalk_NCRIMS_Data(object):
                         row[21] = 'CO SHPO'
 
                         # INVSTGTN_CMT = row[22]
-                        row[22] = format_data(comments, target_schema['INVSTGTN_CMT'])
+                        row[22] = formatData(comments, target_schema['INVSTGTN_CMT'])
 
                         # ADMIN_ST = row[23] - default CO
                         row[23] = 'CO'
@@ -878,7 +878,7 @@ class Crosswalk_NCRIMS_Data(object):
 
             # Update BLM Acres
             logger.console('Updating BLM_ACRES..')
-            get_BLM_acres(working_lyr, blm_lyr, 'INVSTGTN_SHPO_ID', workspace='in_memory')        
+            getBLMAcres(working_lyr, blm_lyr, 'INVSTGTN_SHPO_ID', workspace='in_memory')        
 
 ###################################################################################################
 ##
