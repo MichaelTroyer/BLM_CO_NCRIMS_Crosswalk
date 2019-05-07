@@ -30,7 +30,7 @@ BLM Colorado National Cultural Resources Information Management System Crosswalk
 
 #TODO: Better documentation..
 Increment this counter everytime you admit you need better documentation but still don't do it:
-blownOffTheDocs = 21
+blownOffTheDocs = 22
 
 Usage:
 
@@ -145,7 +145,7 @@ class Crosswalk_NCRIMS_Data(object):
         """Modify the values and properties of parameters before internal
         validation is performed.  This method is called whenever a parameter
         has been changed."""
-        # Defaults for easier testing - drop for prduction
+        # Defaults
         if not parameters[0].altered:
             parameters[0].value = os.path.join(os.path.dirname(__file__), 'data', 'SHPO_SOURCE_DATA.gdb')
             parameters[1].value = os.path.join(os.path.dirname(__file__), 'output')
@@ -173,7 +173,7 @@ class Crosswalk_NCRIMS_Data(object):
             # Clear memory JIC
             deleteInMemory()
             
-            # get the input gdb and output file paths
+            # get the input parameters
             input_path = parameters[0].valueAsText
             output_path = parameters[1].valueAsText
             land_owner_lyr = parameters[2].valueAsText
@@ -197,7 +197,7 @@ class Crosswalk_NCRIMS_Data(object):
             gdb_name = 'BLM_CO_NCRIMS_Crosswalk_{}'.format(date_time_stamp)
             arcpy.CreateFileGDB_management(output_path, gdb_name, "10.0")
             gdb_name = os.path.join(output_path, gdb_name) + '.gdb'
-            # Schema from XML
+            # Set schema from XML
             arcpy.ImportXMLWorkspaceDocument_management(gdb_name, gdb_template_xml, 'SCHEMA_ONLY')
 
             # Set workspace to fGDB
@@ -470,11 +470,11 @@ class Crosswalk_NCRIMS_Data(object):
                             row[20], row[21] = None, None
 
                         # RSRCE_CNDTN_ASSMNT = row[25]
-                        # Pull from related table
+                        # Pulled from related table
                         cnd = tbl_updates['Condition'].get(SITE_)
                         if cnd:
                             cnd_val = cnd['Condition']
-                            cnd_date = cnd['date']
+                            # cnd_date = cnd['date']  # Unused 
                             dom_cnd_val = mapDomainValues(cnd_val, domain_mapping['CRM_DOM_RSRCE_CNDTN_ASSMNT'])
                             if not dom_cnd_val:
                                 raise DomainError('CRM_DOM_RSRCE_CNDTN_ASSMNT', cnd_val)
@@ -486,7 +486,7 @@ class Crosswalk_NCRIMS_Data(object):
                         assessment = tbl_updates['Assessment'].get(SITE_)
                         if assessment:
                             assess_val = assessment['Assessment']
-                            assess_date = assessment['date']
+                            assess_date = assessment['date'] 
 
                             # RSRCE_NRHP_ELGBLE_STTS = row[22]
                             dom_assess_val = mapDomainValues(assess_val, domain_mapping['DOM_YES_NO_UNDTRMND'])
@@ -496,6 +496,7 @@ class Crosswalk_NCRIMS_Data(object):
 
                             try:
                                 # RSRCE_LAST_RCRD_DT = row[26] - year only as string
+                                # assess_date is already a date
                                 row[26] = assess_date.year
                             except:
                                 row[26] = None
@@ -622,7 +623,7 @@ class Crosswalk_NCRIMS_Data(object):
             # Update BLM Acres
             blm_lyr = arcpy.MakeFeatureLayer_management(land_owner_lyr, r"in_memory\blm_lyr", "adm_manage='BLM'")
             
-            logger.console('Updating Resource BLM_ACRES..')
+            logger.console('Updating BLM_ACRES..')
             getBLMAcres(working_lyr, blm_lyr, 'RSRCE_SHPO_ID', workspace='in_memory')
 
 
@@ -637,11 +638,10 @@ class Crosswalk_NCRIMS_Data(object):
             # Remove the old [CRM_Investigations] - replace with input data copy - mod in place
             arcpy.Delete_management(os.path.join(gdb_name, 'CRM_Investigations'))
 
-            # Get the paths to output success and failure FCs, duplicate table, and M-to-M table
+            # Get the paths to output success and failure FCs, duplicate table
             success = os.path.join(gdb_name, 'CRM_Investigations')
             failure = os.path.join(gdb_name, 'CRM_Investigations_fails')
             duplicates = os.path.join(gdb_name, 'CRM_Investigations_duplicates')
-            site_survey_map_table = os.path.join(gdb_name, 'CRM_RSRCE_INVSTGTN_TBL')  # Again?
 
             # Copy input fc to database and get as a feature layer
             # Will be success layer, failures will be copied to <faliure> and removed
@@ -759,12 +759,12 @@ class Crosswalk_NCRIMS_Data(object):
 
                         # INVSTGTN_DATE = row[14] - use LAST_DATE_ and fillna with completion date
                         # INVSTGTN_CMPLT_MONTH_YR = row[13] from INVSTGTN_DATE
-                        if LAST_DATE_ > 20000:  # int days since 1/1/1900
+                        if LAST_DATE_ > 20000:  # int days since 1/1/1900 - start_date
                             row_date = start_date + datetime.timedelta(LAST_DATE_)  
                             row[14] = row_date
                             row[13] = '{}-{}'.format(row_date.month, row_date.year)
                         elif completion:
-                            row_date = tryParseDate(completion)
+                            row_date = tryParseDate(completion)  # string objects
                             row[14] = row_date
                             row[13] = '{}-{}'.format(row_date.month, row_date.year) 
                         else:
@@ -815,6 +815,7 @@ class Crosswalk_NCRIMS_Data(object):
                         row[21] = 'CO SHPO'
 
                         # INVSTGTN_CMT = row[22]
+                        # Make sure not too long
                         row[22] = formatData(comments, target_schema['INVSTGTN_CMT'])
 
                         # ADMIN_ST = row[23] - default CO
