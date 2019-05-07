@@ -88,18 +88,24 @@ def formatData(input_data, dest_params):
 def getMostCommonWithTies(values):
     '''
     Find the most common values in a list of values. Will also check for ties.
-    Returns a tuple (boolean flag - was there a tie?, most common value(s)).
+    Returns a tuple (boolean flag - was there a tie?, most common value(s) and their counts).
+
+    i.e. 
+    ['a', 'b', 'c', 'd', 'a'] --> (False, [('a', 2)])
+    ['a', 'b', 'a', 'b'] --> (True, [('a', 2), ('b', 2)])
     '''
     try:
-        # Value frequency
         value_counts = Counter(values)
-        # Get the frequency of counts
-        frequency_counts = value_counts.values()
-        # If the most common count frequency is greater than 1, there is a tie for most common value
-        most_frequent_count = Counter(frequency_counts).most_common(1)[0][1]
+        # Get the frequency of value counts
+        # This gets really meta..
+        value_frequencies = value_counts.values()
+        frequency_counts = Counter(value_frequencies)
+        max_frequency = max(frequency_counts)
+        most_frequent_count = frequency_counts[max_frequency]
+        # If the most frequent count is greater than 1, there is a tie for most common value
         if most_frequent_count > 1:
             # Tie = True, return the most common values
-            return (True, value_counts.most_common(most_frequent_count))
+            return (True, sorted(value_counts.most_common(most_frequent_count)))
         else:
             # Tie = False, return the most common value
             return (False, value_counts.most_common(1))
