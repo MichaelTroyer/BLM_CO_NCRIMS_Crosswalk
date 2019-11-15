@@ -728,7 +728,7 @@ class Crosswalk_NCRIMS_Data(object):
                         lead_agenc = row[6].strip()
                         institutio = row[7].strip()
                         method     = row[8].strip()
-                        completion = row[9].strip()
+                        completion = row[9]  #this was originally a string, now a date
                         activity   = row[10].strip()
 
                         # NCRIMS field indexes
@@ -759,14 +759,22 @@ class Crosswalk_NCRIMS_Data(object):
 
                         # INVSTGTN_DATE = row[14] - use LAST_DATE_ and fillna with completion date
                         # INVSTGTN_CMPLT_MONTH_YR = row[13] from INVSTGTN_DATE
-                        if LAST_DATE_ > 20000:  # int days since 1/1/1900 - start_date
-                            row_date = start_date + datetime.timedelta(LAST_DATE_)  
-                            row[14] = row_date
-                            row[13] = '{}-{}'.format(row_date.month, row_date.year)
+                        
+                        # INVSTGTN_DATE and LAST_DATE_ were originally double/string, but now date objects
+                        # if LAST_DATE_ > 20000:  # int days since 1/1/1900 - start_date
+                        #     row_date = start_date + datetime.timedelta(LAST_DATE_)  
+                        #     row[14] = row_date
+                        #     row[13] = '{}-{}'.format(row_date.month, row_date.year)
+                        # elif completion:
+                        #     row_date = tryParseDate(completion)
+                        #     row[14] = row_date
+                        #     row[13] = '{}-{}'.format(row_date.month, row_date.year)
+                        if LAST_DATE_:
+                            row[14] = LAST_DATE_
+                            row[13] = '{}-{}'.format(LAST_DATE_.month, LAST_DATE_.year)
                         elif completion:
-                            row_date = tryParseDate(completion)  # string objects
-                            row[14] = row_date
-                            row[13] = '{}-{}'.format(row_date.month, row_date.year) 
+                            row[14] = completion
+                            row[13] = '{}-{}'.format(completion.month, completion.year)
                         else:
                             row[14], row[15] = None, None
                         
